@@ -6,9 +6,9 @@ using System.Text;
 
 namespace AnyBind
 {
-    class ReflectionHelpers
+    internal static class ReflectionHelpers
     {
-        public static bool TryGetMemberValue(object instance, TypeInfo typeInfo, string memberName, out object memberValue)
+        internal static bool TryGetMemberValue(object instance, TypeInfo typeInfo, string memberName, out object memberValue)
         {
             var property = SearchTypeAndBase(typeInfo, t => t.DeclaredProperties.FirstOrDefault(pi => pi.Name == memberName));
             if (property != null)

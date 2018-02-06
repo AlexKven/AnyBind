@@ -7,7 +7,7 @@ using System.Text;
 
 namespace AnyBind
 {
-    public class BindingManager
+    public static class BindingManager
     {
         internal abstract class DependencyBase
         {
@@ -32,7 +32,7 @@ namespace AnyBind
         private static ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>> Registrations
             = new ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>>();
 
-        public struct TypeProperty
+        internal struct TypeProperty
         {
             Type Type { get; }
             string Property { get; }
@@ -92,9 +92,9 @@ namespace AnyBind
             {
                 var member = splitPath[0];
                 splitPath.RemoveAt(0);
-                //TryGetMemberValue(instance, type, member, out var next);
-                //instance = next;
-                //type = next.GetType();
+                ReflectionHelpers.TryGetMemberValue(instance, typeInfo, member, out var next);
+                instance = next;
+                typeInfo = next.GetType().GetTypeInfo();
 
             }
             return instance;
