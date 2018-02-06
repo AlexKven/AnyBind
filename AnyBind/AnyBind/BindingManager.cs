@@ -29,7 +29,8 @@ namespace AnyBind
             }
         }
 
-        private static ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>> Registrations;
+        private static ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>> Registrations
+            = new ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>>();
 
         public struct TypeProperty
         {
