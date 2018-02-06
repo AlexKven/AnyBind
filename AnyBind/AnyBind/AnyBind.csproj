@@ -4,7 +4,4 @@
     <TargetFramework>netstandard1.1</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-  </ItemGroup>
-
 </Project>
