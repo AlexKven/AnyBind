@@ -4,5 +4,6 @@ namespace AnyBind
 {
     public class Class1
     {
+        
     }
 }
