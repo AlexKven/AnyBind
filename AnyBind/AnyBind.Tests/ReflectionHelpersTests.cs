@@ -44,7 +44,7 @@ namespace AnyBind.Tests
             ReflectionHelpers.TryGetMemberValue(class2, typeof(TestClass2).GetTypeInfo(), "Field1", out result);
             ReflectionHelpers.TryGetMemberValue(class2, typeof(TestClass2).GetTypeInfo(), "Field2", out result);
 
-            //var parent = BindingManager.GetParent(class2, typeof(TestClass2).GetTypeInfo(), "Class1.Field1");
+            var parent = BindingManager.GetParentOfSubentity(class2, typeof(TestClass2).GetTypeInfo(), "Class1.Field1");
         }
     }
 }

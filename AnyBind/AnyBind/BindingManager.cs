@@ -5,32 +5,14 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using AnyBind.Internal;
+using AnyBind.Attributes;
 
 [assembly: InternalsVisibleTo("AnyBind.Tests")]
 namespace AnyBind
 {
     public static class BindingManager
     {
-        internal abstract class DependencyBase
-        {
-            public abstract bool TryHookHandler(object applyTo);
-        }
-
-        internal class PropertyDependency : DependencyBase
-        {
-            public string PropertyName { get; }
-
-            public PropertyDependency(string propertyName)
-            {
-                PropertyName = propertyName;
-            }
-
-            public override bool TryHookHandler(object applyTo)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         private static ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>> Registrations
             = new ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>>();
 
@@ -95,7 +77,7 @@ namespace AnyBind
 
         internal static void RegisterChangeHandler(object instance, TypeInfo typeInfo, string propertyName)
         {
-
+            
         }
 
         internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)

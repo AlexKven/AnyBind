@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.1</TargetFramework>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <Folder Include="Internal\" />
+    <Compile Remove="PropertyDependency.cs" />
   </ItemGroup>
 
 </Project>
