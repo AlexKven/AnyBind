@@ -34,6 +34,11 @@ namespace AnyBind
         private static ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>> Registrations
             = new ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>>();
 
+        private static ConcurrentDictionary<long, WeakReference> References
+            = new ConcurrentDictionary<long, WeakReference>();
+
+        private static long NextReferenceId = 0;
+
         internal struct TypeProperty
         {
             Type Type { get; }
@@ -43,6 +48,7 @@ namespace AnyBind
         public static void RegisterClass(Type type)
         {
             var typeInfo = type.GetTypeInfo();
+            
             var propertyRegistrations = new Dictionary<string, List<DependencyBase>>();
             foreach (var property in typeInfo.DeclaredProperties)
             {
@@ -83,11 +89,16 @@ namespace AnyBind
 
             foreach (var registration in registrations)
             {
-
+                
             }
         }
 
-        internal static object GetParent(object instance, TypeInfo typeInfo, string path)
+        internal static void RegisterChangeHandler(object instance, TypeInfo typeInfo, string propertyName)
+        {
+
+        }
+
+        internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)
         {
             var splitPath = path.Split('.').ToList();
             while (instance != null && splitPath.Count > 1)
@@ -97,7 +108,6 @@ namespace AnyBind
                 ReflectionHelpers.TryGetMemberValue(instance, typeInfo, member, out var next);
                 instance = next;
                 typeInfo = next.GetType().GetTypeInfo();
-
             }
             return instance;
         }

@@ -3,5 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.1</TargetFramework>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Folder Include="Internal\" />
+  </ItemGroup>
 
 </Project>

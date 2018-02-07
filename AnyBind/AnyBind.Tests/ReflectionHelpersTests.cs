@@ -24,7 +24,18 @@ namespace AnyBind.Tests
         }
 
         [Fact]
-        public void TryGetMemberValue_Succeess()
+        public void SearchTypeAndBase()
+        {
+            var _this = ReflectionHelpers.SearchTypeAndBase<PropertyInfo>(typeof(TestClass2).GetTypeInfo(), t => t.DeclaredProperties.FirstOrDefault(prop => prop.Name == "Prop2"));
+            var _base = ReflectionHelpers.SearchTypeAndBase<PropertyInfo>(typeof(TestClass2).GetTypeInfo(), t => t.DeclaredProperties.FirstOrDefault(prop => prop.Name == "Prop1"));
+            var _foobar = ReflectionHelpers.SearchTypeAndBase<PropertyInfo>(typeof(TestClass2).GetTypeInfo(), t => t.DeclaredProperties.FirstOrDefault(prop => prop.Name == "Prop3"));
+            Assert.NotNull(_this);
+            Assert.NotNull(_base);
+            Assert.Null(_foobar);
+        }
+
+        [Fact]
+        public void TryGetMemberValue_Success()
         {
             var class2 = new TestClass2();
             object result;
@@ -33,7 +44,7 @@ namespace AnyBind.Tests
             ReflectionHelpers.TryGetMemberValue(class2, typeof(TestClass2).GetTypeInfo(), "Field1", out result);
             ReflectionHelpers.TryGetMemberValue(class2, typeof(TestClass2).GetTypeInfo(), "Field2", out result);
 
-            var parent = BindingManager.GetParent(class2, typeof(TestClass2).GetTypeInfo(), "Class1.Field1");
+            //var parent = BindingManager.GetParent(class2, typeof(TestClass2).GetTypeInfo(), "Class1.Field1");
         }
     }
 }
