@@ -140,9 +140,16 @@ namespace AnyBind
 			Events.Add(new EventState() { EventInfo = eventInfo, DeclaringTargetReference = new WeakReference(declaringTarget), Forwarder = forwarder, HandlerDelegate = handlerDelegate });
         }
 
-		public void Unsubscribe(EventInfo eventInfo)
+		public void Unsubscribe(EventInfo eventInfo, object declaringTarget)
 		{
-
+			var eventState = Events.FirstOrDefault(
+				es => es.EventInfo == eventInfo && 
+				es.DeclaringTargetReference.GetTargetOrDefault() == declaringTarget);
+			if (eventState != null)
+			{
+				eventState.EventInfo.RemoveEventHandler(declaringTarget, eventState.HandlerDelegate);
+				Events.Remove(eventState);
+			}
 		}
 
         public void Dispose()
