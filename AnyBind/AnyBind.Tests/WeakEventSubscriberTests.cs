@@ -182,5 +182,94 @@ namespace AnyBind.Tests
 			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 8)), Times.Exactly(15));
 			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(20));
 		}
+
+		[Fact]
+		public void Unsubscribe()
+		{
+			TestClass1 tc1 = new TestClass1();
+			Mock<TestClass2> tc2 = new Mock<TestClass2>() { CallBase = true };
+
+			var eventInfo1 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
+			var eventInfo2 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("NoParameterEvent");
+
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			subscriber1.Subscribe(eventInfo1, tc1);
+			subscriber1.Subscribe(eventInfo2, tc1);
+
+			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			subscriber2.Subscribe(eventInfo1, tc1);
+			subscriber2.Subscribe(eventInfo2, tc1);
+
+			tc1.OnMyEvent(5, "five"); // +2
+			tc1.OnNoParameterEvent(); // +2
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(2));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(2));
+
+			subscriber1.Unsubscribe(eventInfo1, tc1);
+
+			tc1.OnMyEvent(5, "five"); // +1
+			tc1.OnNoParameterEvent(); // +2
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(3));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(4));
+
+			subscriber2.Unsubscribe(eventInfo2, tc1);
+
+			tc1.OnMyEvent(5, "five"); // +1
+			tc1.OnNoParameterEvent(); // +1
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(4));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(5));
+
+			subscriber1.Unsubscribe(eventInfo2, tc1);
+
+			tc1.OnMyEvent(5, "five"); // +1
+			tc1.OnNoParameterEvent(); // +0
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(5));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(5));
+
+			subscriber2.Unsubscribe(eventInfo1, tc1);
+
+			tc1.OnMyEvent(5, "five"); // +0
+			tc1.OnNoParameterEvent(); // +0
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(5));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(5));
+		}
+
+		[Fact]
+		public void Dispose()
+		{
+			TestClass1 tc1 = new TestClass1();
+			Mock<TestClass2> tc2 = new Mock<TestClass2>() { CallBase = true };
+
+			var eventInfo1 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
+			var eventInfo2 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("NoParameterEvent");
+
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			subscriber1.Subscribe(eventInfo1, tc1);
+			subscriber1.Subscribe(eventInfo2, tc1);
+
+			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			subscriber2.Subscribe(eventInfo1, tc1);
+			subscriber2.Subscribe(eventInfo2, tc1);
+
+			using (subscriber1)
+			{
+				tc1.OnMyEvent(5, "five"); // +2
+				tc1.OnNoParameterEvent(); // +2
+			}
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(2));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(2));
+
+			tc1.OnMyEvent(5, "five"); // +1
+			tc1.OnNoParameterEvent(); // +2
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(3));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(3));
+		}
 	}
 }
