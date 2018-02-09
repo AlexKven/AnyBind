@@ -9,14 +9,25 @@ namespace AnyBind
     internal class WeakEventSubscriber : IDisposable
     {
         #region EventHandlerForwarder classes
-        internal abstract class EventHandlerForwarder
+        internal abstract class EventHandlerForwarderBase
         {
             public Action<object[]> Delegate { get; set; }
 
 			public abstract Type DelegateType { get; }
         }
 
-        internal class EventHandlerForwarder<T> : EventHandlerForwarder
+		internal class EventHandlerForwarder : EventHandlerForwarderBase
+		{
+			public void Handler()
+			{
+				Delegate(new object[0]);
+			}
+
+			public override Type DelegateType => typeof(Action);
+		}
+
+
+		internal class EventHandlerForwarder<T> : EventHandlerForwarderBase
         {
 			public void Handler(T param1)
             {
@@ -26,7 +37,7 @@ namespace AnyBind
 			public override Type DelegateType => typeof(Action<T>);
 		}
 
-        internal class EventHandlerForwarder<T1, T2> : EventHandlerForwarder
+        internal class EventHandlerForwarder<T1, T2> : EventHandlerForwarderBase
         {
             public void Handler(T1 param1, T2 param2)
             {
@@ -36,7 +47,7 @@ namespace AnyBind
 			public override Type DelegateType => typeof(Action<T1, T2>);
 		}
 
-        internal class EventHandlerForwarder<T1, T2, T3> : EventHandlerForwarder
+        internal class EventHandlerForwarder<T1, T2, T3> : EventHandlerForwarderBase
         {
             public void Handler(T1 param1, T2 param2, T3 param3)
             {
@@ -46,7 +57,7 @@ namespace AnyBind
 			public override Type DelegateType => typeof(Action<T1, T2, T3>);
 		}
 
-        internal class EventHandlerForwarder<T1, T2, T3, T4> : EventHandlerForwarder
+        internal class EventHandlerForwarder<T1, T2, T3, T4> : EventHandlerForwarderBase
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4)
             {
@@ -56,7 +67,7 @@ namespace AnyBind
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4>);
 		}
 
-        internal class EventHandlerForwarder<T1, T2, T3, T4, T5> : EventHandlerForwarder
+        internal class EventHandlerForwarder<T1, T2, T3, T4, T5> : EventHandlerForwarderBase
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5)
             {
@@ -66,7 +77,7 @@ namespace AnyBind
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4, T5>);
 		}
 
-        internal class EventHandlerForwarder<T1, T2, T3, T4, T5, T6> : EventHandlerForwarder
+        internal class EventHandlerForwarder<T1, T2, T3, T4, T5, T6> : EventHandlerForwarderBase
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6)
             {
@@ -76,7 +87,7 @@ namespace AnyBind
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4, T5, T6>);
 		}
 
-        internal class EventHandlerForwarder<T1, T2, T3, T4, T5, T6, T7> : EventHandlerForwarder
+        internal class EventHandlerForwarder<T1, T2, T3, T4, T5, T6, T7> : EventHandlerForwarderBase
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6, T7 param7)
             {
@@ -86,7 +97,7 @@ namespace AnyBind
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4, T5, T6, T7>);
 		}
 
-        internal class EventHandlerForwarder<T1, T2, T3, T4, T5, T6, T7, T8> : EventHandlerForwarder
+        internal class EventHandlerForwarder<T1, T2, T3, T4, T5, T6, T7, T8> : EventHandlerForwarderBase
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6, T7 param7, T8 param8)
             {
@@ -101,7 +112,7 @@ namespace AnyBind
         {
             public EventInfo EventInfo { get; set; }
             public WeakReference DeclaringTargetReference { get; set; }
-			public EventHandlerForwarder Forwarder { get; set; }
+			public EventHandlerForwarderBase Forwarder { get; set; }
 
 			public Delegate HandlerDelegate { get; set; }
         }
@@ -119,20 +130,55 @@ namespace AnyBind
         
         public void Subscribe(EventInfo eventInfo, object declaringTarget)
         {
-            EventHandlerForwarder forwarder;
+            EventHandlerForwarderBase forwarder;
             MethodInfo method = eventInfo.EventHandlerType.GetTypeInfo().GetDeclaredMethod("Invoke");
 
-            var forwarderType = typeof(EventHandlerForwarder<,>).GetTypeInfo()
-                .MakeGenericType(method.GetParameters().Select(pInfo => pInfo.ParameterType).ToArray());
+			var parameterTypes = method.GetParameters().Select(pInfo => pInfo.ParameterType).ToArray();
+			Type forwarderGeneric = null;
+			Type forwarderType = null;
+			switch (parameterTypes.Length)
+			{
+				case 0:
+					forwarderType = typeof(EventHandlerForwarder);
+					break;
+				case 1:
+					forwarderGeneric = typeof(EventHandlerForwarder<>);
+					break;
+				case 2:
+					forwarderGeneric = typeof(EventHandlerForwarder<,>);
+					break;
+				case 3:
+					forwarderGeneric = typeof(EventHandlerForwarder<,,>);
+					break;
+				case 4:
+					forwarderGeneric = typeof(EventHandlerForwarder<,,,>);
+					break;
+				case 5:
+					forwarderGeneric = typeof(EventHandlerForwarder<,,,,>);
+					break;
+				case 6:
+					forwarderGeneric = typeof(EventHandlerForwarder<,,,,,>);
+					break;
+				case 7:
+					forwarderGeneric = typeof(EventHandlerForwarder<,,,,,,>);
+					break;
+				case 8:
+					forwarderGeneric = typeof(EventHandlerForwarder<,,,,,,,>);
+					break;
+			}
 
-            forwarder = (EventHandlerForwarder)forwarderType.GetTypeInfo()
+
+			forwarderType = forwarderType ?? forwarderGeneric.GetTypeInfo()
+                .MakeGenericType(parameterTypes);
+
+            forwarder = (EventHandlerForwarderBase)forwarderType.GetTypeInfo()
                 .DeclaredConstructors.First().Invoke(new object[0]);
 
 			forwarder.Delegate = ForwarderDelegate;
 
 			var handlerMethodInfo = forwarderType.GetTypeInfo().GetDeclaredMethod("Handler");
 
-			var handlerDelegate = handlerMethodInfo.CreateDelegate(forwarder.DelegateType, forwarder);
+			var handlerDelegate = handlerMethodInfo.CreateDelegate(eventInfo.EventHandlerType, forwarder);
 
 
 			eventInfo.AddEventHandler(declaringTarget, handlerDelegate);

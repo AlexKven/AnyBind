@@ -33,12 +33,20 @@ namespace AnyBind.Tests
 			{
 				EightParameterEvent?.Invoke(p1, p2, p3, p4, p5, p6, p7, p8);
 			}
+
+			public event Action NoParameterEvent;
+
+			public void OnNoParameterEvent()
+			{
+				NoParameterEvent?.Invoke();
+			}
 		}
 
 		public class TestClass2
 		{
-			public virtual void DoSomethingSpecific(int num, string str)
+			public virtual int DoSomethingSpecific(int num, string str)
 			{
+				return num;
 			}
 
 			public virtual void DoSomethingGeneral(object[] parameters)
@@ -71,18 +79,27 @@ namespace AnyBind.Tests
 		[Fact]
 		public void WeakReferenceHoldingTests()
 		{
+			int testNum = 0;
+
 			TestClass1 tc1 = new TestClass1();
 			TestClass2 tc2 = new TestClass2();
 
 			WeakReference<TestClass2> tc2ref = new WeakReference<TestClass2>(tc2);
 			WeakReference<TestClass1> tc1ref = new WeakReference<TestClass1>(tc1);
 
-			var eventInfo = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
+			var eventInfo1 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
 
-			WeakEventSubscriber specificSubscriber = new WeakEventSubscriber(tc2, (target, parameters) => ((TestClass2)target).DoSomethingSpecific((int)parameters[0], (string)parameters[1]));
-			specificSubscriber.Subscribe(eventInfo, tc1);
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2, (target, parameters) => testNum = ((TestClass2)target).DoSomethingSpecific((int)parameters[0], (string)parameters[1]));
+			subscriber1.Subscribe(eventInfo1, tc1);
+
+			var eventInfo2 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("EightParameterEvent");
+			
+			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			subscriber2.Subscribe(eventInfo2, tc1);
 
 			tc1.OnMyEvent(6, "six");
+
+			Assert.Equal(expected: 6, actual: testNum);
 
 			tc2 = null;
 
@@ -90,7 +107,9 @@ namespace AnyBind.Tests
 			GC.WaitForPendingFinalizers();
 
 			Assert.False(tc2ref.TryGetTarget(out tc2));
-			tc1.OnMyEvent(6, "six");
+			tc1.OnMyEvent(7, "seven");
+
+			Assert.Equal(expected: 6, actual: testNum);
 
 			tc1 = null;
 
@@ -98,6 +117,70 @@ namespace AnyBind.Tests
 			GC.WaitForPendingFinalizers();
 
 			Assert.False(tc1ref.TryGetTarget(out tc1));
+		}
+
+		[Fact]
+		public void ManySubscribed()
+		{
+			TestClass1 tc1 = new TestClass1();
+			Mock<TestClass2> tc2 = new Mock<TestClass2>() { CallBase = true };
+
+			int numCalls1 = 5;
+			int numCalls2 = 10;
+			int numCalls3 = 15;
+			int numCalls4 = 20;
+
+			var eventInfo1 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
+			var eventInfo2 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("FakePropertyChangedEvent");
+			var eventInfo3 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("EightParameterEvent");
+			var eventInfo4 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("NoParameterEvent");
+
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			subscriber1.Subscribe(eventInfo1, tc1);
+			subscriber1.Subscribe(eventInfo2, tc1);
+			subscriber1.Subscribe(eventInfo3, tc1);
+			subscriber1.Subscribe(eventInfo4, tc1);
+
+			Random rnd = new Random();
+
+			while (numCalls1 + numCalls2 + numCalls3 + numCalls4 > 0)
+			{
+				switch (rnd.Next(1, 5))
+				{
+					case 1:
+						if (numCalls1 > 0)
+						{
+							numCalls1--;
+							tc1.OnMyEvent(1, "two");
+						}
+						break;
+					case 2:
+						if (numCalls2 > 0)
+						{
+							numCalls2--;
+							tc1.OnFakePropertyChanged("property");
+						}
+						break;
+					case 3:
+						if (numCalls3 > 0)
+						{
+							numCalls3--;
+							tc1.OnEightParameterEvent(1, 2, 3, 4, "five", true, new DateTime(7), 8.0);
+						}
+						break;
+					case 4:
+						if (numCalls4 > 0)
+						{
+							numCalls4--;
+							tc1.OnNoParameterEvent();
+						}
+						break;
+				}
+			}
+
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 2)), Times.Exactly(10 + 5));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 8)), Times.Exactly(15));
+			tc2.Verify(tc => tc.DoSomethingGeneral(It.Is<Object[]>(param => param.Length == 0)), Times.Exactly(20));
 		}
 	}
 }
