@@ -14,8 +14,8 @@ namespace AnyBind
 {
     public static class BindingManager
     {
-        private static ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>> Registrations
-            = new ConcurrentDictionary<Type, Dictionary<string, List<DependencyBase>>>();
+        private static ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>> Registrations
+            = new ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>>();
 
         private static ConcurrentDictionary<long, WeakReference> References
             = new ConcurrentDictionary<long, WeakReference>();
@@ -35,7 +35,7 @@ namespace AnyBind
         {
             var typeInfo = type.GetTypeInfo();
             
-            var propertyRegistrations = new Dictionary<string, List<DependencyBase>>();
+            var propertyRegistrations = new Dictionary<DependencyBase, List<string>>();
             foreach (var property in typeInfo.DeclaredProperties)
             {
                 SortedSet<string> dependsOn = new SortedSet<string>();
@@ -60,10 +60,11 @@ namespace AnyBind
 
                 foreach (var path in dependsOn)
                 {
-                    if (propertyRegistrations.TryGetValue(path, out var dependencies))
-                        dependencies.Add(new PropertyDependency(property.Name));
+                    var dependency = new PropertyDependency(property.Name);
+                    if (propertyRegistrations.TryGetValue(dependency, out var dependencies))
+                        dependencies.Add(property.Name);
                     else
-                        propertyRegistrations[path] = new List<DependencyBase>() { new PropertyDependency(property.Name) };
+                        propertyRegistrations[dependency] = new List<string>() { property.Name };
                 }
             }
             Registrations.TryAdd(type, propertyRegistrations);
@@ -79,18 +80,23 @@ namespace AnyBind
 
             var subscriber = new WeakEventSubscriber(instance, (s, p, fp) =>
             {
-                OnUpdate(s, p[0].ToString(), (long)fp);
+                OnUpdate(s, p[0].ToString(), (IEnumerable<string>)fp);
             });
             Subscribers.TryAdd(id, subscriber);
 
             foreach (var registration in registrations)
             {
-                var parent = GetParentOfSubentity(instance, typeInfo, registration.Key);
-                var parentTypeInfo = parent?.GetType().GetTypeInfo();
-                if (parentTypeInfo.ImplementedInterfaces.Contains(typeof(INotifyPropertyChanged)))
+                switch (registration.Key)
                 {
-                    subscriber.Subscribe(ReflectionHelpers.SearchTypeAndBase(parentTypeInfo,
-                        ti => ti.GetDeclaredEvent("PropertyChanged")), parent, registration.Value.Select(db => ((PropertyDependency)db).PropertyName));
+                    case PropertyDependency propertyDependency:
+                        var parent = GetParentOfSubentity(instance, typeInfo, propertyDependency.PropertyName);
+                        var parentTypeInfo = parent?.GetType().GetTypeInfo();
+                        if (parentTypeInfo.ImplementedInterfaces.Contains(typeof(INotifyPropertyChanged)))
+                        {
+                            subscriber.Subscribe(ReflectionHelpers.SearchTypeAndBase(parentTypeInfo,
+                                ti => ti.GetDeclaredEvent("PropertyChanged")), parent, registration.Value);
+                        }
+                        break;
                 }
             }
         }
@@ -100,12 +106,12 @@ namespace AnyBind
             
         }
 
-        internal static void OnUpdate(object target, string propertyName, long referenceId)
+        internal static void OnUpdate(object target, string sendingProperty, IEnumerable<string> propertiesToUpdate)
         {
-            //foreach (var property in propertiesToUpdate)
-            //{
-            //    target.RaiseEvent<PropertyChangedEventArgs>("PropertyChanged", new PropertyChangedEventArgs(property));
-            //}
+            foreach (var property in propertiesToUpdate)
+            {
+                target.RaiseEvent<PropertyChangedEventArgs>("PropertyChanged", new PropertyChangedEventArgs(property));
+            }
         }
 
         internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)
