@@ -63,7 +63,7 @@ namespace AnyBind.Tests
 
 			var eventInfo = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
 
-			WeakEventSubscriber specificSubscriber = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingSpecific((int)parameters[0], (string)parameters[1]));
+			WeakEventSubscriber specificSubscriber = new WeakEventSubscriber(tc2.Object, (target, parameters, fp) => ((TestClass2)target).DoSomethingSpecific((int)parameters[0], (string)parameters[1]));
 			specificSubscriber.Subscribe(eventInfo, tc1);
 
 			tc1.OnMyEvent(5, "five");
@@ -89,12 +89,12 @@ namespace AnyBind.Tests
 
 			var eventInfo1 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
 
-			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2, (target, parameters) => testNum = ((TestClass2)target).DoSomethingSpecific((int)parameters[0], (string)parameters[1]));
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2, (target, parameters, fp) => testNum = ((TestClass2)target).DoSomethingSpecific((int)parameters[0], (string)parameters[1]));
 			subscriber1.Subscribe(eventInfo1, tc1);
 
 			var eventInfo2 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("EightParameterEvent");
 			
-			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2, (target, parameters, fp) => ((TestClass2)target).DoSomethingGeneral(parameters));
 			subscriber2.Subscribe(eventInfo2, tc1);
 
 			tc1.OnMyEvent(6, "six");
@@ -135,7 +135,7 @@ namespace AnyBind.Tests
 			var eventInfo3 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("EightParameterEvent");
 			var eventInfo4 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("NoParameterEvent");
 
-			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters, fp) => ((TestClass2)target).DoSomethingGeneral(parameters));
 			subscriber1.Subscribe(eventInfo1, tc1);
 			subscriber1.Subscribe(eventInfo2, tc1);
 			subscriber1.Subscribe(eventInfo3, tc1);
@@ -192,11 +192,11 @@ namespace AnyBind.Tests
 			var eventInfo1 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
 			var eventInfo2 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("NoParameterEvent");
 
-			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters, fp) => ((TestClass2)target).DoSomethingGeneral(parameters));
 			subscriber1.Subscribe(eventInfo1, tc1);
 			subscriber1.Subscribe(eventInfo2, tc1);
 
-			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2.Object, (target, parameters, fp) => ((TestClass2)target).DoSomethingGeneral(parameters));
 			subscriber2.Subscribe(eventInfo1, tc1);
 			subscriber2.Subscribe(eventInfo2, tc1);
 
@@ -248,11 +248,11 @@ namespace AnyBind.Tests
 			var eventInfo1 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("MyEvent");
 			var eventInfo2 = typeof(TestClass1).GetTypeInfo().GetDeclaredEvent("NoParameterEvent");
 
-			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			WeakEventSubscriber subscriber1 = new WeakEventSubscriber(tc2.Object, (target, parameters, fp) => ((TestClass2)target).DoSomethingGeneral(parameters));
 			subscriber1.Subscribe(eventInfo1, tc1);
 			subscriber1.Subscribe(eventInfo2, tc1);
 
-			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2.Object, (target, parameters) => ((TestClass2)target).DoSomethingGeneral(parameters));
+			WeakEventSubscriber subscriber2 = new WeakEventSubscriber(tc2.Object, (target, parameters, fp) => ((TestClass2)target).DoSomethingGeneral(parameters));
 			subscriber2.Subscribe(eventInfo1, tc1);
 			subscriber2.Subscribe(eventInfo2, tc1);
 

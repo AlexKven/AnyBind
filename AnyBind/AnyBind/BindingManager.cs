@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using AnyBind.Internal;
 using AnyBind.Attributes;
+using System.ComponentModel;
 
 [assembly: InternalsVisibleTo("AnyBind.Tests")]
 namespace AnyBind
@@ -18,6 +19,9 @@ namespace AnyBind
 
         private static ConcurrentDictionary<long, WeakReference> References
             = new ConcurrentDictionary<long, WeakReference>();
+
+        private static ConcurrentDictionary<long, WeakEventSubscriber> Subscribers
+            = new ConcurrentDictionary<long, WeakEventSubscriber>();
 
         private static long NextReferenceId = 0;
 
@@ -56,10 +60,10 @@ namespace AnyBind
 
                 foreach (var path in dependsOn)
                 {
-                    var dependencies = propertyRegistrations[path];
-                    if (dependencies == null)
+                    if (propertyRegistrations.TryGetValue(path, out var dependencies))
+                        dependencies.Add(new PropertyDependency(property.Name));
+                    else
                         propertyRegistrations[path] = new List<DependencyBase>() { new PropertyDependency(property.Name) };
-                    dependencies.Add(new PropertyDependency(property.Name));
                 }
             }
             Registrations.TryAdd(type, propertyRegistrations);
@@ -68,16 +72,40 @@ namespace AnyBind
         public static void SetupBindings<T>(T instance)
         {
             var registrations = Registrations[typeof(T)];
+            var typeInfo = instance?.GetType().GetTypeInfo();
+
+            var id = NextReferenceId++;
+            References.TryAdd(id, new WeakReference(instance));
+
+            var subscriber = new WeakEventSubscriber(instance, (s, p, fp) =>
+            {
+                OnUpdate(s, p[0].ToString(), (long)fp);
+            });
+            Subscribers.TryAdd(id, subscriber);
 
             foreach (var registration in registrations)
             {
-                
+                var parent = GetParentOfSubentity(instance, typeInfo, registration.Key);
+                var parentTypeInfo = parent?.GetType().GetTypeInfo();
+                if (parentTypeInfo.ImplementedInterfaces.Contains(typeof(INotifyPropertyChanged)))
+                {
+                    subscriber.Subscribe(ReflectionHelpers.SearchTypeAndBase(parentTypeInfo,
+                        ti => ti.GetDeclaredEvent("PropertyChanged")), parent, registration.Value.Select(db => ((PropertyDependency)db).PropertyName));
+                }
             }
         }
 
         internal static void RegisterChangeHandler(object instance, TypeInfo typeInfo, string propertyName)
         {
             
+        }
+
+        internal static void OnUpdate(object target, string propertyName, long referenceId)
+        {
+            //foreach (var property in propertiesToUpdate)
+            //{
+            //    target.RaiseEvent<PropertyChangedEventArgs>("PropertyChanged", new PropertyChangedEventArgs(property));
+            //}
         }
 
         internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)

@@ -11,7 +11,9 @@ namespace AnyBind
         #region EventHandlerForwarder classes
         internal abstract class EventHandlerForwarderBase
         {
-            public Action<object[]> Delegate { get; set; }
+            public Action<object[], object> Delegate { get; set; }
+
+            public object Parameter { get; set; }
 
 			public abstract Type DelegateType { get; }
         }
@@ -20,7 +22,7 @@ namespace AnyBind
 		{
 			public void Handler()
 			{
-				Delegate(new object[0]);
+				Delegate(new object[0], Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action);
@@ -31,7 +33,7 @@ namespace AnyBind
         {
 			public void Handler(T param1)
             {
-                Delegate(new object[] { param1 });
+                Delegate(new object[] { param1 }, Parameter);
             }
 
 			public override Type DelegateType => typeof(Action<T>);
@@ -41,7 +43,7 @@ namespace AnyBind
         {
             public void Handler(T1 param1, T2 param2)
             {
-                Delegate(new object[] { param1, param2 });
+                Delegate(new object[] { param1, param2 }, Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action<T1, T2>);
@@ -51,7 +53,7 @@ namespace AnyBind
         {
             public void Handler(T1 param1, T2 param2, T3 param3)
             {
-                Delegate(new object[] { param1, param2, param3 });
+                Delegate(new object[] { param1, param2, param3 }, Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action<T1, T2, T3>);
@@ -61,7 +63,7 @@ namespace AnyBind
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4)
             {
-                Delegate(new object[] { param1, param2, param3, param4 });
+                Delegate(new object[] { param1, param2, param3, param4 }, Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4>);
@@ -71,7 +73,7 @@ namespace AnyBind
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5)
             {
-                Delegate(new object[] { param1, param2, param3, param4, param5 });
+                Delegate(new object[] { param1, param2, param3, param4, param5 }, Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4, T5>);
@@ -81,7 +83,7 @@ namespace AnyBind
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6)
             {
-                Delegate(new object[] { param1, param2, param3, param4, param5, param6 });
+                Delegate(new object[] { param1, param2, param3, param4, param5, param6 }, Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4, T5, T6>);
@@ -91,7 +93,7 @@ namespace AnyBind
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6, T7 param7)
             {
-                Delegate(new object[] { param1, param2, param3, param4, param5, param6, param7 });
+                Delegate(new object[] { param1, param2, param3, param4, param5, param6, param7 }, Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4, T5, T6, T7>);
@@ -101,7 +103,7 @@ namespace AnyBind
         {
             public void Handler(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6, T7 param7, T8 param8)
             {
-                Delegate(new object[] { param1, param2, param3, param4, param5, param6, param7, param8 });
+                Delegate(new object[] { param1, param2, param3, param4, param5, param6, param7, param8 }, Parameter);
 			}
 
 			public override Type DelegateType => typeof(Action<T1, T2, T3, T4, T5, T6, T7, T8>);
@@ -118,17 +120,19 @@ namespace AnyBind
         }
 
         private WeakReference HandleTargetReference { get; }
-		private Action<object, object[]> Handler { get; }
+		private Action<object, object[], object> Handler { get; }
 
 		private List<EventState> Events = new List<EventState>();
 
-        public WeakEventSubscriber(object handleTarget, Action<object, object[]> handler)
+        private object Parameter = null;
+
+        public WeakEventSubscriber(object handleTarget, Action<object, object[], object> handler)
         {
             HandleTargetReference = new WeakReference(handleTarget);
 			Handler = handler;
         }
         
-        public void Subscribe(EventInfo eventInfo, object declaringTarget)
+        public void Subscribe(EventInfo eventInfo, object declaringTarget, object parameter = null)
         {
             EventHandlerForwarderBase forwarder;
             MethodInfo method = eventInfo.EventHandlerType.GetTypeInfo().GetDeclaredMethod("Invoke");
@@ -175,6 +179,7 @@ namespace AnyBind
                 .DeclaredConstructors.First().Invoke(new object[0]);
 
 			forwarder.Delegate = ForwarderDelegate;
+            forwarder.Parameter = parameter;
 
 			var handlerMethodInfo = forwarderType.GetTypeInfo().GetDeclaredMethod("Handler");
 
@@ -210,12 +215,12 @@ namespace AnyBind
 			Events.Clear();
         }
 
-		private void ForwarderDelegate(object[] parameters)
+		private void ForwarderDelegate(object[] parameters, object forwarderParameter)
 		{
 			object target;
 			if (HandleTargetReference.IsAlive && (target = HandleTargetReference.Target) != null)
 			{
-				Handler(target, parameters);
+				Handler(target, parameters, forwarderParameter);
 			}
 			else
 			{

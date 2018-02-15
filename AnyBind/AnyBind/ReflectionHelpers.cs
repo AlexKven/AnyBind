@@ -38,5 +38,29 @@ namespace AnyBind
             }
             return result;
         }
+
+        internal static void RaiseEvent<TEventArgs>(this object source, string eventName, TEventArgs eventArgs) where TEventArgs : EventArgs
+        {
+            RaiseEvent(source, source?.GetType().GetTypeInfo(), eventName, eventArgs);
+        }
+
+        private static void RaiseEvent<TEventArgs>(object source, TypeInfo typeInfo, string eventName, TEventArgs eventArgs) where TEventArgs : EventArgs
+        {
+            var eventDelegate = typeInfo.GetDeclaredField(eventName)?.GetValue(source) as MulticastDelegate;
+
+            if (eventDelegate == null)
+            {
+                typeInfo = typeInfo.BaseType?.GetTypeInfo();
+                if (typeInfo != null)
+                    RaiseEvent(source, typeInfo, eventName, eventArgs);
+            }
+            else
+            {
+                foreach (var handler in eventDelegate.GetInvocationList())
+                {
+                    handler.DynamicInvoke(source, eventArgs);
+                }
+            }
+        }
     }
 }
