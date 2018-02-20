@@ -62,5 +62,19 @@ namespace AnyBind
                 }
             }
         }
+
+        internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)
+        {
+            var splitPath = path.Split('.').ToList();
+            while (instance != null && splitPath.Count > 1)
+            {
+                var member = splitPath[0];
+                splitPath.RemoveAt(0);
+                ReflectionHelpers.TryGetMemberValue(instance, typeInfo, member, out var next);
+                instance = next;
+                typeInfo = next.GetType().GetTypeInfo();
+            }
+            return instance;
+        }
     }
 }

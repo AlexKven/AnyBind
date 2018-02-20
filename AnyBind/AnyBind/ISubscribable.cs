@@ -9,6 +9,6 @@ namespace AnyBind
     {
         IEnumerable<string> SubscribableProperties { get; }
 
-        void RaisePropertyChanged(string propertyName, params string[] exclude);
+        void RaisePropertyChanged(PropertyChangedEventArgs e);
     }
 }

@@ -72,6 +72,7 @@
     <Compile Include="BindingManagerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReflectionHelpersTests.cs" />
+    <Compile Include="SubscribableHandlerTests.cs" />
     <Compile Include="WeakEventSubscriberTests.cs" />
   </ItemGroup>
   <ItemGroup>

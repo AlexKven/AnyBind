@@ -77,7 +77,7 @@ namespace AnyBind
             {
                 OnUpdate(s, p[0].ToString(), (IEnumerable<string>)fp);
             });
-            Subscribers.TryAdd(id, subscriber);
+            //Subscribers.TryAdd(id, subscriber);
 
             foreach (var registration in registrations)
             {
