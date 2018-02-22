@@ -142,6 +142,8 @@ namespace AnyBind
                 previousProperties.AddRange(typedE.PreviousPropertyPaths);
             }
 
+            previousProperties.Add(propertyPath);
+
             foreach (var dependent in GetFullListOfDependents(propertyPath).Distinct())
             {
                 IEnumerable<string> dependentsEnumerable() { yield return dependent; }
