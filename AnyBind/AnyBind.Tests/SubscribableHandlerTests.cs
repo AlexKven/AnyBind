@@ -24,6 +24,18 @@ namespace AnyBind.Tests
             PropertyChanged?.Invoke(this, e);
         }
 
+        public object GetPropertyValue(string propertyName)
+        {
+            switch (propertyName)
+            {
+                case "Num1":
+                    return Num1;
+                case "Num2":
+                    return Num2;
+            }
+            return null;
+        }
+
         private int _Num1 = 0;
         public int Num1
         {
@@ -46,8 +58,8 @@ namespace AnyBind.Tests
             }
         }
 
-        public IEnumerable<string> SubscribableProperties => throw new NotImplementedException();
-    }
+        public IEnumerable<string> SubscribableProperties => new string[] { "Num1", "Num2" };
+}
 
     public class TestClass2 : ISubscribable
     {
@@ -65,6 +77,22 @@ namespace AnyBind.Tests
         public void RaisePropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
+        }
+
+        public object GetPropertyValue(string propertyName)
+        {
+            switch (propertyName)
+            {
+                case "Num1":
+                    return Num1;
+                case "Num2":
+                    return Num2;
+                case "Class1":
+                    return Class1;
+                case "Calculation":
+                    return Calculation;
+            }
+            return null;
         }
 
         private int _Num1 = 2;
@@ -100,10 +128,10 @@ namespace AnyBind.Tests
             }
         }
 
-        [DependsOn("Num1", "Num2")]
-        public int Calculation => Num1 + Num2;
+        [DependsOn("Num1", "Num2", "Class1.Num1", "Class1.Num2")]
+        public int Calculation => Num1 + Num2 + (Class1?.Num1 ?? 0) * (Class1?.Num2 ?? 0);
 
-        public IEnumerable<string> SubscribableProperties => throw new NotImplementedException();
+        public IEnumerable<string> SubscribableProperties => new string[] { "Num1", "Num2", "Class1", "Calculation" };
     }
 
     public class SubscribableHandlerTests
@@ -115,6 +143,8 @@ namespace AnyBind.Tests
             
             class2Registration.Add(new PropertyDependency("Num1"), new List<string>() { "Calculation" });
             class2Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
+            class2Registration.Add(new PropertyDependency("Class1.Num1"), new List<string>() { "Calculation" });
+            class2Registration.Add(new PropertyDependency("Class1.Num2"), new List<string>() { "Calculation" });
 
             DependencyManager.Registrations.TryAdd(typeof(TestClass1), class1Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass2), class2Registration);
@@ -123,17 +153,82 @@ namespace AnyBind.Tests
         [Fact]
         public void BasicTest()
         {
+            // Arrange
             SetupTestClasses();
 
             TestClass2 testClass = new TestClass2();
             SubscribableHandler handler = new SubscribableHandler(testClass);
 
+            Dictionary<string, int> callCounts = new Dictionary<string, int>();
+            callCounts.Add("Num1", 0);
+            callCounts.Add("Num2", 0);
+            callCounts.Add("Calculation", 0);
+
+            int calculation = 0;
+
             testClass.PropertyChanged += (s, e) =>
             {
-
+                callCounts[e.PropertyName]++;
+                calculation = testClass.Calculation;
             };
 
+            // Act
             testClass.Num1 = 7;
+            testClass.Num2 = 14;
+
+            // Assert
+            Assert.Equal(expected: 1, actual: callCounts["Num1"]);
+            Assert.Equal(expected: 1, actual: callCounts["Num2"]);
+            Assert.Equal(expected: 2, actual: callCounts["Calculation"]);
+            Assert.Equal(expected: 21, actual: calculation);
+        }
+
+        [Fact]
+        public void SubclassBasicTest()
+        {
+            // Arrange
+            SetupTestClasses();
+
+            TestClass2 testClass = new TestClass2();
+            TestClass1 testClass1 = new TestClass1();
+            SubscribableHandler handler = new SubscribableHandler(testClass);
+
+            Dictionary<string, int> callCounts = new Dictionary<string, int>();
+            callCounts.Add("Num1", 0);
+            callCounts.Add("Num2", 0);
+            callCounts.Add("Class1", 0);
+            callCounts.Add("Class1.Num1", 0);
+            callCounts.Add("Class1.Num2", 0);
+            callCounts.Add("Calculation", 0);
+
+            int calculation = 0;
+
+            testClass.PropertyChanged += (s, e) =>
+            {
+                callCounts[e.PropertyName]++;
+                calculation = testClass.Calculation;
+            };
+
+            testClass1.PropertyChanged += (s, e) =>
+            {
+                callCounts[$"Class1.{e.PropertyName}"]++;
+            };
+
+            // Act
+            testClass.Num1 = 7;
+            testClass.Num2 = 14;
+            testClass.Class1 = testClass1;
+            testClass1.Num1 = 2;
+            testClass1.Num2 = 5;
+
+            // Assert
+            Assert.Equal(expected: 1, actual: callCounts["Num1"]);
+            Assert.Equal(expected: 1, actual: callCounts["Num2"]);
+            Assert.Equal(expected: 1, actual: callCounts["Class1"]);
+            Assert.Equal(expected: 1, actual: callCounts["Class1.Num1"]);
+            Assert.Equal(expected: 1, actual: callCounts["Class1.Num2"]);
+            Assert.Equal(expected: 5, actual: callCounts["Calculation"]);
+            Assert.Equal(expected: 31, actual: calculation);
         }
     }
 }
