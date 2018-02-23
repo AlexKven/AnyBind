@@ -10,7 +10,4 @@
     <Compile Remove="PropertyDependency.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-  </ItemGroup>
-
 </Project>

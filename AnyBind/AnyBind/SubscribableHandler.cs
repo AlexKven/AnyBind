@@ -79,7 +79,7 @@ namespace AnyBind
             return result;
         }
 
-        private void RaisePropertyChanged(string propertyPath, IEnumerable<string> previousProperties)
+        private void RaisePropertyChanged(string propertyPath, bool secondaryEvent)
         {
             ISubscribable instance;
             if (Instance.TryGetTarget(out instance))
@@ -96,7 +96,7 @@ namespace AnyBind
                 if (objectPath != "")
                     return;
 
-                var e = new DependentPropertyChangedEventArgs(objectPath, propertyName, previousProperties.ToArray());
+                var e = new DependentPropertyChangedEventArgs(propertyName, objectPath, secondaryEvent);
                 instance.RaisePropertyChanged(e);
             }
         }
@@ -129,28 +129,23 @@ namespace AnyBind
         private void OnPropertyChanged(string path, PropertyChangedEventArgs e)
         {
             string propertyPath = $"{path}.{e.PropertyName}".Trim('.');
+            bool updateProperties = true;
 
             CheckSubpropertyChangeHandlers(propertyPath);
-
-            List<string> previousProperties = new List<string>();
 
             if (e is DependentPropertyChangedEventArgs)
             {
                 var typedE = (DependentPropertyChangedEventArgs)e;
-                if (typedE.CurrentPath != path)
-                    return;
-                previousProperties.AddRange(typedE.PreviousPropertyPaths);
+                if (typedE.ObjectPath == path && typedE.SecondaryEvent)
+                    updateProperties = false;
             }
 
-            previousProperties.Add(propertyPath);
-
-            foreach (var dependent in GetFullListOfDependents(propertyPath).Distinct())
+            if (updateProperties)
             {
-                IEnumerable<string> dependentsEnumerable() { yield return dependent; }
-
-                if (previousProperties.Contains(dependent))
-                    continue;
-                RaisePropertyChanged(dependent, previousProperties.Concat(dependentsEnumerable()));
+                foreach (var dependent in GetFullListOfDependents(propertyPath).Distinct())
+                {
+                    RaisePropertyChanged(dependent, true);
+                }
             }
         }
 

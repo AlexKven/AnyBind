@@ -19,5 +19,10 @@ namespace AnyBind
 			reference.TryGetTarget(out object result);
 			return result;
 		}
+
+        internal static bool SafeEquals<T>(this IEquatable<T> left, IEquatable<T> right)
+        {
+            return left?.Equals(right) ?? false;
+        }
     }
 }

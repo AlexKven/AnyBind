@@ -8,17 +8,17 @@ namespace AnyBind
 {
     internal class DependentPropertyChangedEventArgs : PropertyChangedEventArgs
     {
-        public IEnumerable<string> PreviousPropertyPaths { get; private set; }
+        public string ObjectPath { get; private set; }
 
-        public string CurrentPath { get; private set; }
+        public bool SecondaryEvent { get; private set; }
 
         public DependentPropertyChangedEventArgs(string propertyName) : base(propertyName) { }
 
-        public DependentPropertyChangedEventArgs(string currentPath, string propertyName, params string[] previousPropertyPaths)
+        public DependentPropertyChangedEventArgs(string propertyName, string objectPath, bool secondaryEvent)
             : base(propertyName)
         {
-            CurrentPath = currentPath;
-            PreviousPropertyPaths = previousPropertyPaths;
+            ObjectPath = objectPath;
+            SecondaryEvent = secondaryEvent;
         }
     }
 }
