@@ -151,17 +151,11 @@ namespace AnyBind
 
         private IEnumerable<string> GetFullListOfDependents(string propertyPath)
         {
-            var subKeys = PropertyDependencies.Keys.Where(key => key.StartsWith($"{propertyPath}."));
-            if (PropertyDependencies.TryGetValue(propertyPath, out var dependents))
-            {
-                foreach (var dependent in dependents)
-                    yield return dependent;
-            }
-            foreach (var subKey in subKeys)
-            {
-                foreach (var dependent in PropertyDependencies[subKey])
-                    yield return dependent;
-            }
+            List<string> search = new List<string>() { propertyPath };
+            search.AddRange(PropertyDependencies.Keys.Where(key => key.StartsWith($"{propertyPath}.")));
+            var result = PropertyDependencies.FindDependencyBranches(search.ToArray());
+            result.Remove(propertyPath);
+            return result;
         }
     }
 }

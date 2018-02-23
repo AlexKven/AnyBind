@@ -10,4 +10,8 @@
     <Compile Remove="PropertyDependency.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="Internal\GeneralSubscribable.cs" />
+  </ItemGroup>
+
 </Project>

@@ -18,6 +18,8 @@ namespace AnyBind
         private static ConcurrentDictionary<long, WeakReference> References
             = new ConcurrentDictionary<long, WeakReference>();
 
+        private static List<SubscribableHandler> SetupInstances = new List<SubscribableHandler>();
+
         private static long NextReferenceId = 0;
 
         internal struct TypeProperty
@@ -65,35 +67,9 @@ namespace AnyBind
             Registrations.TryAdd(type, propertyRegistrations);
         }
 
-        public static void SetupBindings<T>(T instance) where T : ISubscribable
+        public static void SetupBindings(object instance)
         {
-            var registrations = Registrations[typeof(T)];
-            var typeInfo = instance?.GetType().GetTypeInfo();
-
-            var id = NextReferenceId++;
-            References.TryAdd(id, new WeakReference(instance));
-
-            var subscriber = new WeakEventSubscriber(instance, (s, p, fp) =>
-            {
-                OnUpdate(s, p[0].ToString(), (IEnumerable<string>)fp);
-            });
-            //Subscribers.TryAdd(id, subscriber);
-
-            foreach (var registration in registrations)
-            {
-                switch (registration.Key)
-                {
-                    case PropertyDependency propertyDependency:
-                        var parent = GetParentOfSubentity(instance, typeInfo, propertyDependency.PropertyName);
-                        var parentTypeInfo = parent?.GetType().GetTypeInfo();
-                        if (parentTypeInfo.ImplementedInterfaces.Contains(typeof(INotifyPropertyChanged)))
-                        {
-                            subscriber.Subscribe(ReflectionHelpers.SearchTypeAndBase(parentTypeInfo,
-                                ti => ti.GetDeclaredEvent("PropertyChanged")), parent, registration.Value);
-                        }
-                        break;
-                }
-            }
+            
         }
 
         internal static void RegisterChangeHandler(object instance, TypeInfo typeInfo, string propertyName)

@@ -371,7 +371,7 @@ namespace AnyBind.Tests
         }
 
         [Fact]
-        public void CircularDependencies()
+        public void SimpleCircularDependencies()
         {
             // Arrange
             SetupTestClasses();

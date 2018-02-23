@@ -24,5 +24,36 @@ namespace AnyBind
         {
             return left?.Equals(right) ?? false;
         }
+
+        internal static List<T> FindDependencyBranches<T>(this Dictionary<T, List<T>> dependencyTree, params T[] toSearch) where T : IEquatable<T>
+        {
+            List<T> result = new List<T>();
+
+            void traverseNode(List<T> items)
+            {
+                foreach (var sub in items)
+                {
+                    if (!result.Contains(sub))
+                    {
+                        result.Add(sub);
+                        search(sub);
+                    }
+                }
+            }
+
+            void search(T item)
+            {
+                if (dependencyTree.TryGetValue(item, out var node))
+                {
+                    traverseNode(node);
+                }
+            }
+
+            foreach (var item in toSearch)
+            {
+                search(item);
+            }
+            return result;
+        }
     }
 }
