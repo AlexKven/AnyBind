@@ -106,15 +106,16 @@ namespace AnyBind
             ISubscribable instance;
             if (Instance.TryGetTarget(out instance))
             {
-                if (instance.SubscribableProperties.Contains(propertyPath)
-                    && TryGetSubscribablePropertyCache(propertyPath, out var cached)
+                // if nocache
+                if (TryGetSubscribablePropertyCache(propertyPath, out var cached)
                     && cached != null
                     && ChangeHandlerDelegates.ContainsKey(propertyPath))
                 {
                     cached.PropertyChanged -= ChangeHandlerDelegates[propertyPath];
                 }
 
-                if (instance.SubscribableProperties.Contains(propertyPath))
+                // if nocache
+                if (true)
                 {
                     var propertyValue = instance.GetPropertyValue(propertyPath);
                     if (propertyValue is ISubscribable typedPropertyValue

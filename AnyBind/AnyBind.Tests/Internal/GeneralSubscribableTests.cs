@@ -29,7 +29,6 @@ namespace AnyBind.Tests.Internal
         public void SimpleCase()
         {
             var gs = new GeneralSubscribable(new Test2());
-
         }
     }
 }
