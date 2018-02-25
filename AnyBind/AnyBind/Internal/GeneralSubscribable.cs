@@ -27,13 +27,9 @@ namespace AnyBind.Internal
 
         public object GetPropertyValue(string propertyPath)
         {
-            string propertyName = propertyPath.Substring(propertyPath.LastIndexOf('.') + 1);
-            object parent = Instance;
-            parent = ReflectionHelpers.GetParentOfSubentity(parent, InstanceTypeInfo, propertyPath);
-            if (parent == null)
+            if (!ReflectionHelpers.TryGetMemberPathValue(Instance, InstanceTypeInfo, propertyPath, out var result, false, true))
                 return null;
-
-            return ReflectionHelpers.SearchTypeAndBase(parent.GetType().GetTypeInfo(), t => t.DeclaredProperties.FirstOrDefault(pi => pi.Name == propertyName))?.GetValue(parent);
+            return result;
         }
 
         public void RaisePropertyChanged(PropertyChangedEventArgs e)
