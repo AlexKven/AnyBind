@@ -94,18 +94,6 @@ namespace AnyBind.Tests
             public int Calculation => Num1 + Num2;
         }
 
-        [Fact]
-        public void Test()
-        {
-            BindingManager.RegisterClass(typeof(TestClass2));
-
-            var class2 = new TestClass2();
-
-            class2.PropertyChanged += Class2_PropertyChanged;
-
-            class2.Num1 = 7;
-        }
-
         private void Class2_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
         }
