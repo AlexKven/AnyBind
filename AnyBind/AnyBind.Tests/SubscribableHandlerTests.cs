@@ -14,6 +14,9 @@ namespace AnyBind.Tests
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private Dictionary<string, TestClass2> Dict = new Dictionary<string, TestClass2>()
+        { { "One", new TestClass2() { Num1 = 1, Num2 = 1 } }, { "Two", new TestClass2() { Num2 = 2, Num1 = 2 } } };
+
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -24,6 +27,15 @@ namespace AnyBind.Tests
             PropertyChanged?.Invoke(this, e);
         }
 
+        public TestClass2 this[string key]
+        {
+            get => Dict[key];
+            set
+            {
+                OnPropertyChanged($"[\"{key}\"]");
+            }
+        }
+
         public object GetPropertyValue(string propertyName)
         {
             switch (propertyName)
@@ -32,6 +44,10 @@ namespace AnyBind.Tests
                     return Num1;
                 case "Num2":
                     return Num2;
+                case "[\"One\"]":
+                    return Dict["One"];
+                case "[\"Two\"]":
+                    return Dict["Two"];
             }
             return null;
         }
@@ -57,8 +73,6 @@ namespace AnyBind.Tests
                 OnPropertyChanged(nameof(Num2));
             }
         }
-
-        public IEnumerable<string> SubscribableProperties => new string[] { "Num1", "Num2" };
 }
 
     public class TestClass2 : ISubscribable
@@ -91,6 +105,13 @@ namespace AnyBind.Tests
                     return Class1;
                 case "Calculation":
                     return Calculation;
+            }
+            if (propertyName.StartsWith("Class1"))
+            {
+                var sub = propertyName.Substring(6);
+                if (sub.StartsWith("."))
+                    sub = sub.Substring(1);
+                return Class1.GetPropertyValue(sub);
             }
             return null;
         }
@@ -133,7 +154,10 @@ namespace AnyBind.Tests
         */
         public int Calculation => Num1 + Num2 + (Class1?.Num1 ?? 0) * (Class1?.Num2 ?? 0);
 
-        public IEnumerable<string> SubscribableProperties => new string[] { "Num1", "Num2", "Class1", "Calculation" };
+        /* Simulated dependency:
+        [DependsOn("Class1[\"One\"].Num1", "Class1[\"Two\"].Num1")]
+        */
+        public int Indexer => Class1["One"].Num1 + Class1["Two"].Num1;
     }
 
     public class TestClass3 : ISubscribable
@@ -180,8 +204,6 @@ namespace AnyBind.Tests
             }
         }
 
-        public IEnumerable<string> SubscribableProperties => new string[] { "Double", "Half", "Value" };
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public object GetPropertyValue(string propertyName)
@@ -216,6 +238,13 @@ namespace AnyBind.Tests
             class2Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
             class2Registration.Add(new PropertyDependency("Class1.Num1"), new List<string>() { "Calculation" });
             class2Registration.Add(new PropertyDependency("Class1.Num2"), new List<string>() { "Calculation" });
+            class2Registration.Add(new PropertyDependency("Class1[\"One\"].Num1"), new List<string>() { "Indexer" });
+            class2Registration.Add(new PropertyDependency("Class1[\"Two\"].Num1"), new List<string>() { "Indexer" });
+
+            // These should be implicitly added
+            class2Registration.Add(new PropertyDependency("Class1"), new List<string>() { "Calculation", "Indexer" });
+            class2Registration.Add(new PropertyDependency("Class1[\"One\"]"), new List<string>() { "Indexer" });
+            class2Registration.Add(new PropertyDependency("Class1[\"Two\"]"), new List<string>() { "Indexer" });
 
             class3Registration.Add(new PropertyDependency("Double"), new List<string>() { "Half", "Value" });
             class3Registration.Add(new PropertyDependency("Half"), new List<string>() { "Double", "Value" });
@@ -398,6 +427,63 @@ namespace AnyBind.Tests
             Assert.Equal(expected: 3, actual: callCounts["Double"]);
             Assert.Equal(expected: 3, actual: callCounts["Half"]);
             Assert.Equal(expected: 3, actual: callCounts["Value"]);
+        }
+
+        [Fact]
+        public void SubpropertyIndexedTest()
+        {
+            // Arrange
+            SetupTestClasses();
+
+            TestClass2 testClass = new TestClass2();
+            TestClass1 testClass1 = new TestClass1();
+            testClass.Class1 = testClass1;
+            SubscribableHandler handler = new SubscribableHandler(testClass);
+
+            Dictionary<string, int> callCounts = new Dictionary<string, int>();
+            callCounts.Add("Class1", 0);
+            callCounts.Add("Class1[\"One\"].Num1", 0);
+            callCounts.Add("Class1[\"Two\"].Num1", 0);
+            callCounts.Add("Class1[\"One\"].Num2", 0);
+            callCounts.Add("Class1[\"Two\"].Num2", 0);
+            callCounts.Add("Class1[\"One\"]", 0);
+            callCounts.Add("Class1[\"Two\"]", 0);
+            callCounts.Add("Indexer", 0);
+            callCounts.Add("Calculation", 0);
+
+            int calculation = 0;
+
+            testClass.PropertyChanged += (s, e) =>
+            {
+                callCounts[e.PropertyName]++;
+                calculation = testClass.Indexer;
+            };
+
+            testClass1.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName.StartsWith("["))
+                    callCounts[$"Class1{e.PropertyName}"]++;
+                else
+                    callCounts[$"Class1.{e.PropertyName}"]++;
+            };
+
+            // Act
+            testClass.Class1["One"].Num1 = 2;
+            testClass.Class1["One"].Num2 = 2;
+            testClass.Class1["Two"].Num1 = 3;
+            testClass.Class1["Two"].Num2 = 3;
+            testClass.Class1 = new TestClass1();
+            testClass.Class1["One"].Num2 = 2;
+            testClass.Class1["Two"].Num2 = 3;
+            testClass.Class1["One"] = new TestClass2();
+            testClass.Class1["Two"] = new TestClass2();
+            testClass.Class1["One"].Num1 = 2;
+            testClass.Class1["Two"].Num1 = 3;
+
+            // Assert
+            Assert.Equal(expected: 1, actual: callCounts["Class1"]);
+            Assert.Equal(expected: 7, actual: callCounts["Indexer"]);
+            Assert.Equal(expected: 5, actual: calculation);
         }
     }
 }

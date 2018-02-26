@@ -29,10 +29,13 @@ namespace AnyBind
                 switch (dependency.Key)
                 {
                     case PropertyDependency propertyDependency:
-                        PropertyDependencies.Add(propertyDependency.PropertyName, dependency.Value);
+                        var name = propertyDependency.PropertyName;
+                        PropertyDependencies.Add(name, dependency.Value);
                         break;
                 }
             }
+
+            CachePropertyPath("", instance);
         }
 
         bool TryGetSubscribablePropertyCache(string propertyPath, out ISubscribable result)
@@ -46,7 +49,7 @@ namespace AnyBind
             return false;
         }
 
-        bool TryGetSubscribablePropertyCache(string propertyPath, object value)
+        bool TryAddToSubscribablePropertyCache(string propertyPath, object value)
         {
             if (value is ISubscribable typedValue)
             {
@@ -101,35 +104,54 @@ namespace AnyBind
             }
         }
 
-        private void CheckSubpropertyChangeHandlers(string propertyPath)
+        private void UnCachePropertyPath(string propertyPath)
         {
-            ISubscribable instance;
-            if (Instance.TryGetTarget(out instance))
+            foreach (var path in SubscribablePropertyCache.Keys.Where(key => key.StartsWith(propertyPath)))
             {
                 // if nocache
-                if (TryGetSubscribablePropertyCache(propertyPath, out var cached)
+                if (TryGetSubscribablePropertyCache(path, out var cached)
                     && cached != null
-                    && ChangeHandlerDelegates.ContainsKey(propertyPath))
+                    && ChangeHandlerDelegates.ContainsKey(path))
                 {
                     cached.PropertyChanged -= ChangeHandlerDelegates[propertyPath];
                 }
+            }
+        }
 
+        private void CachePropertyPath(string propertyPath, ISubscribable instance)
+        {
+            foreach (var path in PropertyDependencies.Keys.Where(key => key.StartsWith(propertyPath)))
+            {
                 // if nocache
                 if (true)
                 {
-                    var propertyValue = instance.GetPropertyValue(propertyPath);
+                    var propertyValue = instance.GetPropertyValue(path);
                     if (propertyValue is ISubscribable typedPropertyValue
-                        && TryGetSubscribablePropertyCache(propertyPath, typedPropertyValue))
+                        && TryAddToSubscribablePropertyCache(path, typedPropertyValue))
                     {
-                        typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, propertyPath);
+                        typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, path);
                     }
                 }
             }
         }
 
+        private void CheckSubpropertyChangeHandlers(string propertyPath)
+        {
+            UnCachePropertyPath(propertyPath);
+            ISubscribable instance;
+            if (Instance.TryGetTarget(out instance))
+            {
+                CachePropertyPath(propertyPath, instance);
+            }
+        }
+
         private void OnPropertyChanged(string path, PropertyChangedEventArgs e)
         {
-            string propertyPath = $"{path}.{e.PropertyName}".Trim('.');
+            string propertyPath;
+            if (e.PropertyName.StartsWith("[") || path == "")
+                propertyPath = $"{path}{e.PropertyName}".Trim('.');
+            else
+                propertyPath = $"{path}.{e.PropertyName}".Trim('.');
             bool updateProperties = true;
 
             CheckSubpropertyChangeHandlers(propertyPath);

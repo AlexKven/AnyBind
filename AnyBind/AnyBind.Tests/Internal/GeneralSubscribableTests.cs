@@ -15,6 +15,7 @@ namespace AnyBind.Tests.Internal
             public int Int1 { get; set; } = 1;
             public int Int2 { get; set; } = 4;
             public int Int3 { get; set; } = 9;
+            public int this[int index] => index + 1;
         }
 
         public class Test2
@@ -33,6 +34,7 @@ namespace AnyBind.Tests.Internal
         [InlineData("T1.Int1", typeof(int), "1")]
         [InlineData("T1.Int2", typeof(int), "4")]
         [InlineData("T1.Int3", typeof(int), "9")]
+        [InlineData("T1[5]", typeof(int), "6")]
         public void GetPropertyValue(string propertyPath, Type valueType, string value)
         {
             var gs = new GeneralSubscribable(new Test2());
