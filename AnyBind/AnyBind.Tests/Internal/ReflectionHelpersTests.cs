@@ -103,21 +103,85 @@ namespace AnyBind.Tests
             }
         }
 
+        private struct Bingo
+        {
+            public int Number { get; set; }
+            public char Letter { get; set; }
+
+            public Bingo(char letter, int number)
+            {
+                Number = number;
+                Letter = letter;
+            }
+
+            public static Bingo Convert(int input)
+            {
+                var x = input % 5;
+                var y = input / 5;
+
+                var result = new Bingo();
+                result.Number = x + 1;
+                switch (y)
+                {
+                    case 0:
+                        result.Letter = 'A';
+                        break;
+                    case 1:
+                        result.Letter = 'B';
+                        break;
+                    case 2:
+                        result.Letter = 'C';
+                        break;
+                    case 3:
+                        result.Letter = 'D';
+                        break;
+                    case 4:
+                        result.Letter = 'E';
+                        break;
+                }
+
+                return result;
+            }
+        }
+
+        [Theory]
+        [InlineData(9, 1)]
+        [InlineData(1, 2)]
+        [InlineData(15, 3)]
+        [InlineData(20, null)]
+        public void TryGetIndexedPropertyValue_DictStructSuccess(int input, int? expected)
+        {
+            Dictionary<Bingo, int> myDict = new Dictionary<Bingo, int>()
+            { { new Bingo('B', 5), 1 }, { new Bingo('A', 2), 2 }, { new Bingo('D', 1), 3 } };
+
+            bool success = ReflectionHelpers.TryGetIndexedPropertyValue(myDict, myDict.GetType().GetTypeInfo(), Bingo.Convert(input), out var result);
+
+            Assert.Equal(success, expected.HasValue);
+            if (success)
+            {
+                var intResult = Assert.IsType<int>(result);
+                Assert.Equal(expected: expected.Value, actual: intResult);
+            }
+        }
+
         [Theory]
         [InlineData("Property", true, typeof(TestClass3), typeof(TestClass3))]
         [InlineData("Property.Property", true, typeof(TestClass2), typeof(TestClass3))]
-        [InlineData("Property.Property.Prop1", true, typeof(int), typeof(TestClass2))]
-        [InlineData("Property.Property[1]", true, typeof(int), typeof(TestClass2))]
+        [InlineData("Property.Property.Prop1", true, typeof(int), typeof(TestClass2), "5")]
+        [InlineData("Property.Property[1]", true, typeof(int), typeof(TestClass2), "2")]
+        [InlineData("Property.Property[<pi>]", true, typeof(int), typeof(TestClass2), "315")]
         [InlineData("Property.Property.foobar", false, null, typeof(TestClass2))]
-        public void TryGetMemberPathValueTests(string input, bool success, Type expectedType, Type parentExpectedType)
+        public void TryGetMemberPathValueTests(string input, bool success, Type expectedType, Type parentExpectedType, string expectedValue = null)
         {
             TestClass3 tc3 = new TestClass3() { Property = new TestClass3() { Property = new TestClass2() } };
 
-            bool successResult = ReflectionHelpers.TryGetMemberPathValue(tc3, typeof(TestClass3).GetTypeInfo(), input, out var result, out var parent, true, true);
+            bool successResult = ReflectionHelpers.TryGetMemberPathValue(tc3, typeof(TestClass3).GetTypeInfo(), input, out var result, out var parent, true, true, str => str == "pi" ? 314 : -1);
 
             Assert.Equal(expected: success, actual: successResult);
             Assert.Equal(expected: expectedType, actual: result?.GetType());
             Assert.Equal(expected: parentExpectedType, actual: parent?.GetType());
+            if (expectedValue != null)
+                Assert.Equal(expected: expectedValue, actual: result.ToString());
         }
     }
 }

@@ -8,11 +8,16 @@ namespace AnyBind.Internal
 {
     internal static class ReflectionHelpers
     {
-        internal static bool TryGetMemberValue(object instance, TypeInfo typeInfo, string memberName, out object memberValue, bool searchFields = true, bool searchProperties = true)
+        internal static bool TryGetMemberValue(object instance, TypeInfo typeInfo, string memberName, out object memberValue, bool searchFields = true, bool searchProperties = true, Func<string, object> indexerProvider = null)
         {
             if (memberName.StartsWith("[") && memberName.EndsWith("]") && searchProperties)
             {
                 var indexer = memberName.Substring(1, memberName.Length - 2);
+                if (indexer.StartsWith("<") && indexer.EndsWith(">") && indexerProvider != null)
+                {
+                    indexer = indexer.Substring(1, indexer.Length - 2);
+                    return TryGetIndexedPropertyValue(instance, typeInfo, indexerProvider(indexer), out memberValue);
+                }
                 return TryGetIndexedPropertyValue(instance, typeInfo, indexer, out memberValue);
             }
             if (searchProperties)
@@ -38,7 +43,7 @@ namespace AnyBind.Internal
             return false;
         }
 
-        internal static bool TryGetIndexedPropertyValue(object instance, TypeInfo typeInfo, string indexer, out object memberValue)
+        internal static bool TryGetIndexedPropertyValue(object instance, TypeInfo typeInfo, object indexer, out object memberValue)
         {
             var property = SearchTypeAndBase(typeInfo, t => t.DeclaredProperties.FirstOrDefault(pi => pi.Name == "Item"));
             if (property != null)
@@ -93,7 +98,7 @@ namespace AnyBind.Internal
             }
         }
 
-        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, out object parentValue, bool searchFields = true, bool searchProperties = true)
+        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, out object parentValue, bool searchFields = true, bool searchProperties = true, Func<string, object> indexerProvider = null)
         {
             memberValue = null;
             parentValue = null;
@@ -105,7 +110,7 @@ namespace AnyBind.Internal
                 parentValue = next;
                 var member = splitPath[0];
                 splitPath.RemoveAt(0);
-                if (!ReflectionHelpers.TryGetMemberValue(parentValue, nextTypeInfo, member, out next))
+                if (!ReflectionHelpers.TryGetMemberValue(parentValue, nextTypeInfo, member, out next, searchFields, searchProperties, indexerProvider))
                 {
                     memberValue = null;
                     return false;
@@ -116,9 +121,9 @@ namespace AnyBind.Internal
             return true;
         }
 
-        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, bool searchFields = true, bool searchProperties = true)
+        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, bool searchFields = true, bool searchProperties = true, Func<string, object> indexerProvider = null)
         {
-            return TryGetMemberPathValue(instance, typeInfo, memberPath, out memberValue, out _, searchFields, searchProperties);
+            return TryGetMemberPathValue(instance, typeInfo, memberPath, out memberValue, out _, searchFields, searchProperties, indexerProvider);
         }
         
         internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)
