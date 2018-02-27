@@ -111,7 +111,7 @@ namespace AnyBind.Tests
                 var sub = propertyName.Substring(6);
                 if (sub.StartsWith("."))
                     sub = sub.Substring(1);
-                return Class1.GetPropertyValue(sub);
+                return Class1?.GetPropertyValue(sub);
             }
             return null;
         }
@@ -304,6 +304,7 @@ namespace AnyBind.Tests
             callCounts.Add("Class1", 0);
             callCounts.Add("Class1.Num1", 0);
             callCounts.Add("Class1.Num2", 0);
+            callCounts.Add("Indexer", 0);
             callCounts.Add("Calculation", 0);
 
             int calculation = 0;
@@ -351,6 +352,7 @@ namespace AnyBind.Tests
             callCounts.Add("Num1", 0);
             callCounts.Add("Num2", 0);
             callCounts.Add("Class1", 0);
+            callCounts.Add("Indexer", 0);
             callCounts.Add("Class1a.Num1", 0);
             callCounts.Add("Class1a.Num2", 0);
             callCounts.Add("Class1b.Num1", 0);
