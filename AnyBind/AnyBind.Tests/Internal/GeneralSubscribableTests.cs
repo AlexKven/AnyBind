@@ -37,7 +37,7 @@ namespace AnyBind.Tests.Internal
         [InlineData("T1[5]", typeof(int), "6")]
         public void GetPropertyValue(string propertyPath, Type valueType, string value)
         {
-            var gs = new GeneralSubscribable(new Test2());
+            var gs = new InferredGeneralSubscribable(new Test2());
 
             var result = gs.GetPropertyValue(propertyPath);
 

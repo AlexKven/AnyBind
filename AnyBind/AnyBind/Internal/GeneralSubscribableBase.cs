@@ -7,14 +7,14 @@ using System.Text;
 
 namespace AnyBind.Internal
 {
-    internal class GeneralSubscribable : ISubscribable
+    internal abstract class GeneralSubscribableBase : ISubscribable
     {
         private object Instance { get; }
         private Type InstanceType { get; }
         private TypeInfo InstanceTypeInfo { get; }
         private List<string> Properties { get; } = new List<string>();
 
-        public GeneralSubscribable(object instance)
+        public GeneralSubscribableBase(object instance)
         {
             Instance = instance;
             InstanceType = instance.GetType();
@@ -23,7 +23,7 @@ namespace AnyBind.Internal
 
         public IEnumerable<string> SubscribableProperties => Properties;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public abstract event PropertyChangedEventHandler PropertyChanged;
 
         public object GetPropertyValue(string propertyPath)
         {
@@ -32,9 +32,6 @@ namespace AnyBind.Internal
             return result;
         }
 
-        public void RaisePropertyChanged(PropertyChangedEventArgs e)
-        {
-            Instance.RaiseEvent("PropertyChanged", e);
-        }
+        public abstract void RaisePropertyChanged(PropertyChangedEventArgs e);
     }
 }
