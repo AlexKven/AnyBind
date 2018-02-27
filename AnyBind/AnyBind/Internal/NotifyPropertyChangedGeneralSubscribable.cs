@@ -7,21 +7,25 @@ namespace AnyBind.Internal
 {
     internal class NotifyPropertyChangedGeneralSubscribable : GeneralSubscribableBase
     {
+        private INotifyPropertyChanged Instance { get; }
+
         public NotifyPropertyChangedGeneralSubscribable(INotifyPropertyChanged instance) : base(instance)
         {
-            instance.PropertyChanged += Instance_PropertyChanged;
+            Instance = instance;
+
+            Instance.PropertyChanged += Instance_PropertyChanged;
         }
 
         public override event PropertyChangedEventHandler PropertyChanged;
 
         public override void RaisePropertyChanged(PropertyChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            Instance.RaiseEvent("PropertyChanged", e);
         }
 
         private void Instance_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            PropertyChanged(sender, e);
         }
     }
 }
