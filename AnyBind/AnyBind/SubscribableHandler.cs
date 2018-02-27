@@ -82,19 +82,30 @@ namespace AnyBind
             return result;
         }
 
+        private void BreakIntoPropertyNameAndPath(string propertyPath, out string propertyName, out string objectPath)
+        {
+            if (propertyPath.EndsWith("]"))
+            {
+                var indexOpen = propertyPath.LastIndexOf("[");
+                objectPath = propertyPath.Substring(0, indexOpen);
+                propertyName = propertyPath.Substring(indexOpen + 1);
+            }
+            else if (propertyPath.Contains("."))
+            {
+                var lastIndex = propertyPath.LastIndexOf('.');
+                objectPath = propertyPath.Substring(0, lastIndex);
+                propertyName = propertyPath.Substring(lastIndex + 1);
+            }
+            objectPath = "";
+            propertyName = propertyPath;
+        }
+
         private void RaisePropertyChanged(string propertyPath, bool secondaryEvent)
         {
             ISubscribable instance;
             if (Instance.TryGetTarget(out instance))
             {
-                string objectPath = "";
-                string propertyName = propertyPath;
-                if (propertyPath.Contains("."))
-                {
-                    var lastIndex = propertyPath.LastIndexOf('.');
-                    objectPath = propertyPath.Substring(0, lastIndex);
-                    propertyName = propertyPath.Substring(lastIndex + 1);
-                }
+                BreakIntoPropertyNameAndPath(propertyPath, out var propertyName, out var objectPath);
 
                 if (objectPath != "")
                     return;

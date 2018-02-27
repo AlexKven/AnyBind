@@ -44,10 +44,14 @@ namespace AnyBind.Tests
                     return Num1;
                 case "Num2":
                     return Num2;
+                case "Str":
+                    return Str;
                 case "[\"One\"]":
                     return Dict["One"];
                 case "[\"Two\"]":
                     return Dict["Two"];
+                case "[<Class1.Str>]":
+                    return Dict[Str];
             }
             return null;
         }
@@ -71,6 +75,17 @@ namespace AnyBind.Tests
             {
                 _Num2 = value;
                 OnPropertyChanged(nameof(Num2));
+            }
+        }
+
+        private string _Str = "One";
+        public string Str
+        {
+            get => _Str;
+            set
+            {
+                _Str = value;
+                OnPropertyChanged(nameof(Str));
             }
         }
 }
@@ -158,6 +173,11 @@ namespace AnyBind.Tests
         [DependsOn("Class1[\"One\"].Num1", "Class1[\"Two\"].Num1")]
         */
         public int Indexer => Class1["One"].Num1 + Class1["Two"].Num1;
+
+        /* Simulated dependency:
+        [DependsOn("Class1[<Class1.Str>].Num2")]
+        */
+        public int BoundIndexer => Class1[Class1.Str].Num2;
     }
 
     public class TestClass3 : ISubscribable
@@ -240,11 +260,14 @@ namespace AnyBind.Tests
             class2Registration.Add(new PropertyDependency("Class1.Num2"), new List<string>() { "Calculation" });
             class2Registration.Add(new PropertyDependency("Class1[\"One\"].Num1"), new List<string>() { "Indexer" });
             class2Registration.Add(new PropertyDependency("Class1[\"Two\"].Num1"), new List<string>() { "Indexer" });
+            class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>].Num2"), new List<string>() { "BoundIndexer" });
 
             // These should be implicitly added
-            class2Registration.Add(new PropertyDependency("Class1"), new List<string>() { "Calculation", "Indexer" });
-            class2Registration.Add(new PropertyDependency("Class1[\"One\"]"), new List<string>() { "Indexer" });
-            class2Registration.Add(new PropertyDependency("Class1[\"Two\"]"), new List<string>() { "Indexer" });
+            class2Registration.Add(new PropertyDependency("Class1"), new List<string>() { "Class1.Num2", "Class1.Num1", "Class1[<Class1.Str>]", "Class1[\"One\"]", "Class1[\"Two\"]" });
+            class2Registration.Add(new PropertyDependency("Class1.Str"), new List<string>() { "Class1[<Class1.Str>]" });
+            class2Registration.Add(new PropertyDependency("Class1[\"One\"]"), new List<string>() { "Class1[\"One\"].Num1" });
+            class2Registration.Add(new PropertyDependency("Class1[\"Two\"]"), new List<string>() { "Class1[\"Two\"].Num1" });
+            class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>]"), new List<string>() { "Class1[<Class1.Str>].Num2" });
 
             class3Registration.Add(new PropertyDependency("Double"), new List<string>() { "Half", "Value" });
             class3Registration.Add(new PropertyDependency("Half"), new List<string>() { "Double", "Value" });
@@ -253,6 +276,32 @@ namespace AnyBind.Tests
             DependencyManager.Registrations.TryAdd(typeof(TestClass1), class1Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass2), class2Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass3), class3Registration);
+        }
+
+        private Dictionary<string, int> GetCallCountsDict()
+        {
+            Dictionary<string, int> callCounts = new Dictionary<string, int>();
+            callCounts.Add("Num1", 0);
+            callCounts.Add("Num2", 0);
+            callCounts.Add("Class1", 0);
+            callCounts.Add("Class1[\"One\"].Num1", 0);
+            callCounts.Add("Class1[\"Two\"].Num1", 0);
+            callCounts.Add("Class1[\"One\"].Num2", 0);
+            callCounts.Add("Class1[\"Two\"].Num2", 0);
+            callCounts.Add("Class1[\"One\"]", 0);
+            callCounts.Add("Class1[\"Two\"]", 0);
+            callCounts.Add("Class1[<Class1.Str>]", 0);
+            callCounts.Add("Class1[<Class1.Str>].Num2", 0);
+            callCounts.Add("Class1.Num1", 0);
+            callCounts.Add("Class1.Num2", 0);
+            callCounts.Add("Class1a.Num1", 0);
+            callCounts.Add("Class1a.Num2", 0);
+            callCounts.Add("Class1b.Num1", 0);
+            callCounts.Add("Class1b.Num2", 0);
+            callCounts.Add("Indexer", 0);
+            callCounts.Add("BoundIndexer", 0);
+            callCounts.Add("Calculation", 0);
+            return callCounts;
         }
 
         [Fact]
@@ -298,14 +347,7 @@ namespace AnyBind.Tests
             TestClass1 testClass1 = new TestClass1();
             SubscribableHandler handler = new SubscribableHandler(testClass);
 
-            Dictionary<string, int> callCounts = new Dictionary<string, int>();
-            callCounts.Add("Num1", 0);
-            callCounts.Add("Num2", 0);
-            callCounts.Add("Class1", 0);
-            callCounts.Add("Class1.Num1", 0);
-            callCounts.Add("Class1.Num2", 0);
-            callCounts.Add("Indexer", 0);
-            callCounts.Add("Calculation", 0);
+            Dictionary<string, int> callCounts = GetCallCountsDict();
 
             int calculation = 0;
 
@@ -328,11 +370,6 @@ namespace AnyBind.Tests
             testClass1.Num2 = 5;
 
             // Assert
-            Assert.Equal(expected: 1, actual: callCounts["Num1"]);
-            Assert.Equal(expected: 1, actual: callCounts["Num2"]);
-            Assert.Equal(expected: 1, actual: callCounts["Class1"]);
-            Assert.Equal(expected: 1, actual: callCounts["Class1.Num1"]);
-            Assert.Equal(expected: 1, actual: callCounts["Class1.Num2"]);
             Assert.Equal(expected: 5, actual: callCounts["Calculation"]);
             Assert.Equal(expected: 31, actual: calculation);
         }
@@ -348,16 +385,7 @@ namespace AnyBind.Tests
             TestClass1 testClass1b = new TestClass1();
             SubscribableHandler handler = new SubscribableHandler(testClass);
 
-            Dictionary<string, int> callCounts = new Dictionary<string, int>();
-            callCounts.Add("Num1", 0);
-            callCounts.Add("Num2", 0);
-            callCounts.Add("Class1", 0);
-            callCounts.Add("Indexer", 0);
-            callCounts.Add("Class1a.Num1", 0);
-            callCounts.Add("Class1a.Num2", 0);
-            callCounts.Add("Class1b.Num1", 0);
-            callCounts.Add("Class1b.Num2", 0);
-            callCounts.Add("Calculation", 0);
+            Dictionary<string, int> callCounts = GetCallCountsDict();
 
             int calculation = 0;
 
@@ -390,13 +418,6 @@ namespace AnyBind.Tests
             testClass1b.Num2 = 7;
 
             // Assert
-            Assert.Equal(expected: 1, actual: callCounts["Num1"]);
-            Assert.Equal(expected: 1, actual: callCounts["Num2"]);
-            Assert.Equal(expected: 2, actual: callCounts["Class1"]);
-            Assert.Equal(expected: 2, actual: callCounts["Class1a.Num1"]);
-            Assert.Equal(expected: 2, actual: callCounts["Class1a.Num2"]);
-            Assert.Equal(expected: 1, actual: callCounts["Class1b.Num1"]);
-            Assert.Equal(expected: 1, actual: callCounts["Class1b.Num2"]);
             Assert.Equal(expected: 8, actual: callCounts["Calculation"]);
             Assert.Equal(expected: 42, actual: calculation);
         }
@@ -442,16 +463,7 @@ namespace AnyBind.Tests
             testClass.Class1 = testClass1;
             SubscribableHandler handler = new SubscribableHandler(testClass);
 
-            Dictionary<string, int> callCounts = new Dictionary<string, int>();
-            callCounts.Add("Class1", 0);
-            callCounts.Add("Class1[\"One\"].Num1", 0);
-            callCounts.Add("Class1[\"Two\"].Num1", 0);
-            callCounts.Add("Class1[\"One\"].Num2", 0);
-            callCounts.Add("Class1[\"Two\"].Num2", 0);
-            callCounts.Add("Class1[\"One\"]", 0);
-            callCounts.Add("Class1[\"Two\"]", 0);
-            callCounts.Add("Indexer", 0);
-            callCounts.Add("Calculation", 0);
+            Dictionary<string, int> callCounts = GetCallCountsDict();
 
             int calculation = 0;
 
@@ -476,6 +488,7 @@ namespace AnyBind.Tests
             testClass.Class1["Two"].Num2 = 3;
             testClass.Class1 = new TestClass1();
             testClass.Class1["One"].Num2 = 2;
+            testClass.Class1.Str = "Two";
             testClass.Class1["Two"].Num2 = 3;
             testClass.Class1["One"] = new TestClass2();
             testClass.Class1["Two"] = new TestClass2();
@@ -483,8 +496,8 @@ namespace AnyBind.Tests
             testClass.Class1["Two"].Num1 = 3;
 
             // Assert
-            Assert.Equal(expected: 1, actual: callCounts["Class1"]);
             Assert.Equal(expected: 7, actual: callCounts["Indexer"]);
+            Assert.Equal(expected: 5, actual: callCounts["BoundIndexer"]);
             Assert.Equal(expected: 5, actual: calculation);
         }
     }
