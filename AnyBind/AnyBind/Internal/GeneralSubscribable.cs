@@ -7,7 +7,7 @@ using System.Text;
 
 namespace AnyBind.Internal
 {
-    internal class GeneralSubscribableBase : ISubscribable
+    internal class GeneralSubscribable : ISubscribable
     {
         private object Instance { get; }
         private Type InstanceType { get; }
@@ -15,7 +15,7 @@ namespace AnyBind.Internal
 
         private INotifyPropertyChanged NotifyPropertyChanged;
 
-        public GeneralSubscribableBase(object instance)
+        public GeneralSubscribable(object instance)
         {
             Instance = instance;
             InstanceType = instance.GetType();

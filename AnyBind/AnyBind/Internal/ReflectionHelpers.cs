@@ -102,10 +102,10 @@ namespace AnyBind.Internal
         {
             memberValue = null;
             parentValue = null;
-            var splitPath = memberPath.Replace("[", ".[").Split('.').ToList();
+            var splitPath = memberPath.DisassemblePropertyPath().ToList();
             object next = instance;
             TypeInfo nextTypeInfo = typeInfo;
-            while (instance != null && splitPath.Count > 0)
+            while (instance != null && splitPath.Any())
             {
                 parentValue = next;
                 var member = splitPath[0];
