@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -112,6 +113,14 @@ namespace AnyBind.Tests.Internal
             gs.InstanceTypeInfo.GetProperty(propertyName).SetValue(t2, value);
 
             Assert.True(raised);
+        }
+
+        [Theory]
+        [InlineData(typeof(Test2), true)]
+        [InlineData(typeof(Test1), false)]
+        public void CanSubscribe(Type type, bool result)
+        {
+            Assert.Equal(expected: result, actual: GeneralSubscribable.CanSubscribe(type?.GetTypeInfo()));
         }
     }
 }

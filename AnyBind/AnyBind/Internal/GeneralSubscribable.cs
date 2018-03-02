@@ -49,5 +49,12 @@ namespace AnyBind.Internal
         {
             NotifyPropertyChanged?.RaiseEvent("PropertyChanged", e);
         }
+
+        public static bool CanSubscribe(TypeInfo typeInfo)
+        {
+            if (typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(typeInfo))
+                return true;
+            return false;
+        }
     }
 }
