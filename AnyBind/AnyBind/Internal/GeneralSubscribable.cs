@@ -9,9 +9,9 @@ namespace AnyBind.Internal
 {
     internal class GeneralSubscribable : ISubscribable
     {
-        private object Instance { get; }
-        private Type InstanceType { get; }
-        private TypeInfo InstanceTypeInfo { get; }
+        public object Instance { get; }
+        public Type InstanceType { get; }
+        public TypeInfo InstanceTypeInfo { get; }
 
         private INotifyPropertyChanged NotifyPropertyChanged;
 
@@ -22,6 +22,7 @@ namespace AnyBind.Internal
             InstanceTypeInfo = InstanceType.GetTypeInfo();
 
             NotifyPropertyChanged = instance as INotifyPropertyChanged;
+            HookIntoChangeHandlers();
         }
 
         private void HookIntoChangeHandlers()

@@ -1,6 +1,7 @@
 ﻿using AnyBind.Internal;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,12 +19,58 @@ namespace AnyBind.Tests.Internal
             public int this[int index] => index + 1;
         }
 
-        public class Test2
+        public class Test2 : INotifyPropertyChanged
         {
-            public Test1 T1 { get; set; } = new Test1();
-            public string Str1 { get; set; } = "One";
-            public string Str2 { get; set; } = "Two";
-            public string Str3 { get; set; } = "Three";
+            private Test1 _T1 = new Test1();
+            public Test1 T1
+            {
+                get => _T1;
+                set
+                {
+                    _T1 = value;
+                    OnPropertyChanged(nameof(T1));
+                }
+            }
+
+            private string _Str1 = "One";
+            public string Str1
+            {
+                get => _Str1;
+                set
+                {
+                    _Str1 = value;
+                    OnPropertyChanged(nameof(Str1));
+                }
+            }
+
+            private string _Str2 = "Two";
+            public string Str2
+            {
+                get => _Str2;
+                set
+                {
+                    _Str2 = value;
+                    OnPropertyChanged(nameof(Str2));
+                }
+            }
+
+            private string _Str3 = "Three";
+            public string Str3
+            {
+                get => _Str3;
+                set
+                {
+                    _Str3 = value;
+                    OnPropertyChanged(nameof(Str3));
+                }
+            }
+
+            private void OnPropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
         }
 
         [Theory]
@@ -44,6 +91,27 @@ namespace AnyBind.Tests.Internal
 
             Assert.Equal(expected: valueType, actual: result?.GetType());
             Assert.Equal(expected: value, actual: result?.ToString());
+        }
+
+        [Theory]
+        [InlineData("Str1", "S1")]
+        [InlineData("Str2", "S1")]
+        [InlineData("Str3", "S1")]
+        [InlineData("T1", null)]
+        public void PropertyChanged(string propertyName, object value)
+        {
+            var t2 = new Test2();
+            var gs = new GeneralSubscribable(t2);
+            bool raised = false;
+
+            gs.PropertyChanged += (s, e) =>
+            {
+                raised = (e.PropertyName == propertyName);
+            };
+
+            gs.InstanceTypeInfo.GetProperty(propertyName).SetValue(t2, value);
+
+            Assert.True(raised);
         }
     }
 }
