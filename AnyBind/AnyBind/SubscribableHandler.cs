@@ -157,6 +157,7 @@ namespace AnyBind
             {
                 foreach (var dependent in GetFullListOfDependents(propertyPath).Distinct())
                 {
+                    CheckSubpropertyChangeHandlers(dependent);
                     RaisePropertyChanged(dependent, true);
                 }
             }
