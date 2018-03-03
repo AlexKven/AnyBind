@@ -118,6 +118,8 @@ namespace AnyBind.Tests
                     return Num2;
                 case "Class1":
                     return Class1;
+                case "Class4":
+                    return Class4;
                 case "Calculation":
                     return Calculation;
             }
@@ -164,6 +166,17 @@ namespace AnyBind.Tests
             }
         }
 
+        private TestClass4 _Class4 = null;
+        public TestClass4 Class4
+        {
+            get => _Class4;
+            set
+            {
+                _Class4 = value;
+                OnPropertyChanged(nameof(Class4));
+            }
+        }
+
         /* Simulated dependency:
         [DependsOn("Num1", "Num2", "Class1.Num1", "Class1.Num2")]
         */
@@ -178,6 +191,11 @@ namespace AnyBind.Tests
         [DependsOn("Class1[<Class1.Str>].Num2")]
         */
         public int BoundIndexer => Class1[Class1.Str].Num2;
+
+        /* Simulated dependency:
+        [DependsOn("Class4.Calculation")]
+        */
+        public int Calculation4 => Class4.Calculation;
     }
 
     public class TestClass3 : ISubscribable
@@ -246,6 +264,54 @@ namespace AnyBind.Tests
         }
     }
 
+    public class TestClass4 : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private int _Num1 = 0;
+        public int Num1
+        {
+            get => _Num1;
+            set
+            {
+                _Num1 = value;
+                OnPropertyChanged(nameof(Num1));
+            }
+        }
+
+        private int _Num2 = 0;
+        public int Num2
+        {
+            get => _Num2;
+            set
+            {
+                _Num2 = value;
+                OnPropertyChanged(nameof(Num2));
+            }
+        }
+
+        private TestClass4 _Sub;
+        public TestClass4 Sub
+        {
+            get => _Sub;
+            set
+            {
+                _Sub = value;
+                OnPropertyChanged(nameof(Sub));
+            }
+        }
+
+        /* Simulated dependency:
+        [DependsOn("Num1", "Num2", "Sub.Calculation")]
+        */
+        public int Calculation => Num1 + Num2 + Sub?.Calculation ?? 0;
+    }
+
     public class SubscribableHandlerTests
     {
         private void SetupTestClasses()
@@ -253,6 +319,7 @@ namespace AnyBind.Tests
             var class1Registration = new Dictionary<DependencyBase, List<string>>();
             var class2Registration = new Dictionary<DependencyBase, List<string>>();
             var class3Registration = new Dictionary<DependencyBase, List<string>>();
+            var class4Registration = new Dictionary<DependencyBase, List<string>>();
             
             class2Registration.Add(new PropertyDependency("Num1"), new List<string>() { "Calculation" });
             class2Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
@@ -261,6 +328,7 @@ namespace AnyBind.Tests
             class2Registration.Add(new PropertyDependency("Class1[\"One\"].Num1"), new List<string>() { "Indexer" });
             class2Registration.Add(new PropertyDependency("Class1[\"Two\"].Num1"), new List<string>() { "Indexer" });
             class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>].Num2"), new List<string>() { "BoundIndexer" });
+            class2Registration.Add(new PropertyDependency("Class4.Calculation"), new List<string>() { "Calculation4" });
 
             // These should be implicitly added
             class2Registration.Add(new PropertyDependency("Class1"), new List<string>() { "Class1.Num2", "Class1.Num1", "Class1[<Class1.Str>]", "Class1[\"One\"]", "Class1[\"Two\"]" });
@@ -268,14 +336,24 @@ namespace AnyBind.Tests
             class2Registration.Add(new PropertyDependency("Class1[\"One\"]"), new List<string>() { "Class1[\"One\"].Num1" });
             class2Registration.Add(new PropertyDependency("Class1[\"Two\"]"), new List<string>() { "Class1[\"Two\"].Num1" });
             class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>]"), new List<string>() { "Class1[<Class1.Str>].Num2" });
+            class2Registration.Add(new PropertyDependency("Class4"), new List<string>() { "Class4.Calculation" });
+            class2Registration.Add(new PropertyDependency("Class4.Num1"), new List<string>() { "Class4.Calculation" });
+            class2Registration.Add(new PropertyDependency("Class4.Num2"), new List<string>() { "Class4.Calculation" });
+            class2Registration.Add(new PropertyDependency("Class4.Sub"), new List<string>() { "Class4.Calculation" });
 
             class3Registration.Add(new PropertyDependency("Double"), new List<string>() { "Half", "Value" });
             class3Registration.Add(new PropertyDependency("Half"), new List<string>() { "Double", "Value" });
             class3Registration.Add(new PropertyDependency("Value"), new List<string>() { "Half", "Double" });
 
+            class4Registration.Add(new PropertyDependency("Num1"), new List<string>() { "Calculation" });
+            class4Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
+            class4Registration.Add(new PropertyDependency("Sub.Calculation"), new List<string>() { "Calculation" });
+            class4Registration.Add(new PropertyDependency("Sub"), new List<string>() { "Sub.Calculation" });
+
             DependencyManager.Registrations.TryAdd(typeof(TestClass1), class1Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass2), class2Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass3), class3Registration);
+            DependencyManager.Registrations.TryAdd(typeof(TestClass4), class4Registration);
         }
 
         private Dictionary<string, int> GetCallCountsDict()
@@ -298,9 +376,15 @@ namespace AnyBind.Tests
             callCounts.Add("Class1a.Num2", 0);
             callCounts.Add("Class1b.Num1", 0);
             callCounts.Add("Class1b.Num2", 0);
+            callCounts.Add("Class4", 0);
+            callCounts.Add("Class4.Num1", 0);
+            callCounts.Add("Class4.Num2", 0);
+            callCounts.Add("Class4.Sub", 0);
+            callCounts.Add("Class4.Calculation", 0);
             callCounts.Add("Indexer", 0);
             callCounts.Add("BoundIndexer", 0);
             callCounts.Add("Calculation", 0);
+            callCounts.Add("Calculation4", 0);
             return callCounts;
         }
 
@@ -499,6 +583,38 @@ namespace AnyBind.Tests
             Assert.Equal(expected: 7, actual: callCounts["Indexer"]);
             Assert.Equal(expected: 5, actual: callCounts["BoundIndexer"]);
             Assert.Equal(expected: 5, actual: calculation);
+        }
+
+        [Fact]
+        public void NonISubscribableSubPropertyTest()
+        {
+            // Arrange
+            SetupTestClasses();
+
+            TestClass2 testClass = new TestClass2();
+            TestClass4 testClass4 = new TestClass4();
+            SubscribableHandler handler = new SubscribableHandler(testClass);
+
+            Dictionary<string, int> callCounts = GetCallCountsDict();
+
+            int calculation4 = 0;
+
+            testClass.PropertyChanged += (s, e) =>
+            {
+                callCounts[e.PropertyName]++;
+                calculation4 = testClass.Calculation4;
+            };
+
+            // Act
+            testClass.Class4 = testClass4;
+            testClass4.Num1 = 10;
+            var testClass4b = new TestClass4();
+            testClass4.Sub = testClass4b;
+            testClass4b.Num2 = 20;
+
+            // Assert
+            Assert.Equal(expected: 4, actual: callCounts["Calculation4"]);
+            Assert.Equal(expected: 30, actual: calculation4);
         }
     }
 }
