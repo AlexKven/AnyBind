@@ -309,7 +309,7 @@ namespace AnyBind.Tests
         /* Simulated dependency:
         [DependsOn("Num1", "Num2", "Sub.Calculation")]
         */
-        public int Calculation => Num1 + Num2 + Sub?.Calculation ?? 0;
+        public int Calculation => Num1 + Num2 + (Sub?.Calculation ?? 0);
     }
 
     public class SubscribableHandlerTests
@@ -353,7 +353,7 @@ namespace AnyBind.Tests
             DependencyManager.Registrations.TryAdd(typeof(TestClass1), class1Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass2), class2Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass3), class3Registration);
-            DependencyManager.Registrations.TryAdd(typeof(TestClass4), class4Registration);
+            DependencyManager.Registrations.TryAdd(typeof(GeneralSubscribable), class4Registration);
         }
 
         private Dictionary<string, int> GetCallCountsDict()
@@ -608,12 +608,10 @@ namespace AnyBind.Tests
             // Act
             testClass.Class4 = testClass4;
             testClass4.Num1 = 10;
-            var testClass4b = new TestClass4();
-            testClass4.Sub = testClass4b;
-            testClass4b.Num2 = 20;
+            testClass4.Num2 = 20;
 
             // Assert
-            Assert.Equal(expected: 4, actual: callCounts["Calculation4"]);
+            Assert.Equal(expected: 3, actual: callCounts["Calculation4"]);
             Assert.Equal(expected: 30, actual: calculation4);
         }
     }
