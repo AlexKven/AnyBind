@@ -122,5 +122,26 @@ namespace AnyBind.Tests.Internal
         {
             Assert.Equal(expected: result, actual: GeneralSubscribable.CanSubscribe(type?.GetTypeInfo()));
         }
+        
+        /// <param name="type"></param>
+        /// <param name="properties">
+        /// For properites that you expect to be subscribable, pass with a '+',
+        /// e.g. "PropertyName+"
+        /// </param>
+        [Theory]
+        [InlineData(typeof(Test2), "Prop1+", "Prop2+")]
+        [InlineData(typeof(Test1), "Prop1", "Prop1")]
+        public void FilterSubscribableProperties(Type type, params string[] properties)
+        {
+            // Arrange
+            var input = properties.Select(prop => prop.EndsWith("+") ? prop.Substring(0, prop.Length - 1) : prop);
+            var expectedOutput = properties.Where(prop => prop.EndsWith("+")).Select(prop => prop.Substring(0, prop.Length - 1));
+
+            // Act
+            var output = GeneralSubscribable.FilterSubscribableProperties(type?.GetTypeInfo(), input);
+
+            // Assert
+            Assert.True(expectedOutput.SequenceEqual(output));
+        }
     }
 }

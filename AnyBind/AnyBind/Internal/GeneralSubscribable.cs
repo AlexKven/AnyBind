@@ -56,5 +56,21 @@ namespace AnyBind.Internal
                 return true;
             return false;
         }
+
+        public static IEnumerable<string> FilterSubscribableProperties(TypeInfo typeInfo, IEnumerable<string> properties)
+        {
+            if (typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(typeInfo))
+            {
+                foreach (var prop in properties)
+                    yield return prop;
+            }
+        }
+
+        public static ISubscribable CreateSubscribable(object obj)
+        {
+            if (obj is ISubscribable subscribable)
+                return subscribable;
+            return new GeneralSubscribable(obj);
+        }
     }
 }

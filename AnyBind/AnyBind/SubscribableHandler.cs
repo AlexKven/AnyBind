@@ -22,7 +22,6 @@ namespace AnyBind
             Instance = new WeakReference<ISubscribable>(instance);
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
-            instance.PropertyChanged += GetChangeHandlerDelegate(this, "");
             
             foreach (var dependency in DependencyManager.Registrations[InstanceType])
             {
@@ -113,16 +112,40 @@ namespace AnyBind
 
         private void CachePropertyPath(string propertyPath, ISubscribable instance)
         {
-            foreach (var path in PropertyDependencies.Keys.Where(key => key.StartsWith(propertyPath)))
+            Stack<IEnumerable<string>> pathsToSubscribe = new Stack<IEnumerable<string>>();
+            pathsToSubscribe.Push(propertyPath.DisassemblePropertyPath());
+            var possiblePaths = PropertyDependencies.Keys.Where(key => key.StartsWith(propertyPath));
+            IEnumerable<string> path;
+            while (pathsToSubscribe.Count > 0)
             {
+                path = pathsToSubscribe.Pop();
                 // if nocache
                 if (true)
                 {
-                    var propertyValue = instance.GetPropertyValue(path);
-                    if (propertyValue is ISubscribable typedPropertyValue
-                        && TryAddToSubscribablePropertyCache(path, typedPropertyValue))
+                    var compLength = path.Count();
+                    var reassembled = path.ReassemblePropertyPath();
+                    var nextProperties = possiblePaths.Where(pth => pth.StartsWith(reassembled))
+                        .Select(pth => pth.DisassemblePropertyPath().Skip(compLength).FirstOrDefault())
+                        .Where(pth => pth != null).Distinct();
+
+                    object propertyValue;
+                    if (reassembled == "")
+                        propertyValue = instance;
+                    else
+                        propertyValue = instance.GetPropertyValue(reassembled);
+                    var typeInfo = propertyValue?.GetType()?.GetTypeInfo();
+
+                    var subscribableProperties = GeneralSubscribable.FilterSubscribableProperties(typeInfo, nextProperties);
+                    
+                    foreach (var prop in subscribableProperties)
+                        pathsToSubscribe.Push(path.Concat(new string[] { prop }));
+                    if (GeneralSubscribable.CanSubscribe(typeInfo))
                     {
-                        typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, path);
+                        var typedPropertyValue = GeneralSubscribable.CreateSubscribable(propertyValue);
+                        if (TryAddToSubscribablePropertyCache(reassembled, typedPropertyValue))
+                        {
+                            typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, reassembled);
+                        }
                     }
                 }
             }
