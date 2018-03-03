@@ -15,6 +15,7 @@ namespace AnyBind
         private TypeInfo InstanceTypeInfo;
         private Dictionary<string, PropertyChangedEventHandler> ChangeHandlerDelegates = new Dictionary<string, PropertyChangedEventHandler>();
         private Dictionary<string, List<string>> PropertyDependencies = new Dictionary<string, List<string>>();
+        private Dictionary<string, string> RecursiveDependencies = new Dictionary<string, string>();
         private Dictionary<string, WeakReference<ISubscribable>> SubscribablePropertyCache = new Dictionary<string, WeakReference<ISubscribable>>();
 
         public SubscribableHandler(ISubscribable instance)
@@ -22,6 +23,8 @@ namespace AnyBind
             Instance = new WeakReference<ISubscribable>(instance);
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
+
+            RecursiveDependencies.Add("Class4.Sub", "Class4");
             
             foreach (var dependency in DependencyManager.Registrations[InstanceType])
             {

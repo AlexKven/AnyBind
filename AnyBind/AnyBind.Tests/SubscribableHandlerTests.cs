@@ -353,7 +353,7 @@ namespace AnyBind.Tests
             DependencyManager.Registrations.TryAdd(typeof(TestClass1), class1Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass2), class2Registration);
             DependencyManager.Registrations.TryAdd(typeof(TestClass3), class3Registration);
-            DependencyManager.Registrations.TryAdd(typeof(TestClass4), class4Registration);
+            DependencyManager.Registrations.TryAdd(typeof(GeneralSubscribable), class4Registration);
         }
 
         private Dictionary<string, int> GetCallCountsDict()
