@@ -139,5 +139,22 @@ namespace AnyBind.Internal
             }
             return instance;
         }
+
+        internal static Type GetTypeOfPath(Type objectType, IEnumerable<string> pathComponents)
+        {
+            if (!pathComponents.Any())
+                return objectType;
+            if (objectType == null)
+                return null;
+            var nextProperty = pathComponents.First();
+            var nextPath = pathComponents.Skip(1);
+
+            PropertyInfo property;
+            if (nextProperty.StartsWith("["))
+                property = SearchTypeAndBase(objectType.GetTypeInfo(), t => t.DeclaredProperties.FirstOrDefault(pi => pi.Name == "Item"));
+            else
+                property = SearchTypeAndBase(objectType.GetTypeInfo(), t => t.DeclaredProperties.FirstOrDefault(pi => pi.Name == nextProperty));
+            return GetTypeOfPath(property?.PropertyType, nextPath);
+        }
     }
 }

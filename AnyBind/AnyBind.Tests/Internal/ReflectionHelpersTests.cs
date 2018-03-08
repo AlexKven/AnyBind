@@ -16,6 +16,7 @@ namespace AnyBind.Tests
             public int Prop1 { get; set; } = 5;
             private int Field1 = 10;
             public int this[int index] => index + 1;
+            public TestClass3 Class3 { get; set; }
         }
 
         class TestClass2 : TestClass1
@@ -182,6 +183,23 @@ namespace AnyBind.Tests
             Assert.Equal(expected: parentExpectedType, actual: parent?.GetType());
             if (expectedValue != null)
                 Assert.Equal(expected: expectedValue, actual: result.ToString());
+        }
+
+        [Theory]
+        [InlineData(typeof(TestClass1), "Prop1", typeof(int))]
+        [InlineData(typeof(TestClass1), "Field1", null)]
+        [InlineData(typeof(TestClass1), "[]", typeof(int))]
+        [InlineData(typeof(TestClass1), "[Class3.Property]", typeof(int))]
+        [InlineData(typeof(TestClass1), "Class3", typeof(TestClass3))]
+        [InlineData(typeof(TestClass1), "Class3.Property", typeof(object))]
+        [InlineData(typeof(TestClass2), "Prop2", typeof(int))]
+        [InlineData(typeof(TestClass3), "Property", typeof(object))]
+        [InlineData(typeof(TestClass3), "", typeof(TestClass3))]
+        public void GetTypeOfPath(Type originatingType, string path, Type expectedType)
+        {
+            var result = ReflectionHelpers.GetTypeOfPath(originatingType, path.DisassemblePropertyPath());
+
+            Assert.Equal(expected: expectedType, actual: result);
         }
     }
 }
