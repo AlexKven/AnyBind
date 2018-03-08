@@ -10,25 +10,21 @@ using System.Text;
 
 namespace AnyBind
 {
-    public static class DependencyManager
+    public class DependencyManager
     {
-        internal static ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>> Registrations
+        private ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>> Registrations
             = new ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>>();
 
-        private static ConcurrentDictionary<long, WeakReference> References
-            = new ConcurrentDictionary<long, WeakReference>();
+        private List<SubscribableHandler> SetupInstances = new List<SubscribableHandler>();
 
-        private static List<SubscribableHandler> SetupInstances = new List<SubscribableHandler>();
-
-        private static long NextReferenceId = 0;
-
-        internal struct TypeProperty
+        public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
         {
-            Type Type { get; }
-            string Property { get; }
+            if (!Registrations.TryGetValue(type, out var result))
+                throw new KeyNotFoundException($"No such class as {type} was registered.");
+            return result;
         }
 
-        public static void RegisterClass(Type type)
+        public void RegisterClass(Type type)
         {
             var typeInfo = type.GetTypeInfo();
 
@@ -70,33 +66,6 @@ namespace AnyBind
         public static void SetupBindings(object instance)
         {
             
-        }
-
-        internal static void RegisterChangeHandler(object instance, TypeInfo typeInfo, string propertyName)
-        {
-
-        }
-
-        internal static void OnUpdate(object target, string sendingProperty, IEnumerable<string> propertiesToUpdate)
-        {
-            foreach (var property in propertiesToUpdate)
-            {
-                target.RaiseEvent<PropertyChangedEventArgs>("PropertyChanged", new PropertyChangedEventArgs(property));
-            }
-        }
-
-        internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)
-        {
-            var splitPath = path.Split('.').ToList();
-            while (instance != null && splitPath.Count > 1)
-            {
-                var member = splitPath[0];
-                splitPath.RemoveAt(0);
-                ReflectionHelpers.TryGetMemberValue(instance, typeInfo, member, out var next);
-                instance = next;
-                typeInfo = next.GetType().GetTypeInfo();
-            }
-            return instance;
         }
     }
 }

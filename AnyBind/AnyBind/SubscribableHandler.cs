@@ -17,13 +17,13 @@ namespace AnyBind
         private Dictionary<string, List<string>> PropertyDependencies = new Dictionary<string, List<string>>();
         private Dictionary<string, WeakReference<ISubscribable>> SubscribablePropertyCache = new Dictionary<string, WeakReference<ISubscribable>>();
 
-        public SubscribableHandler(ISubscribable instance)
+        public SubscribableHandler(DependencyManager manager, ISubscribable instance)
         {
             Instance = new WeakReference<ISubscribable>(instance);
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
-            
-            foreach (var dependency in DependencyManager.Registrations[InstanceType])
+
+            foreach (var dependency in manager.GetRegistrations(InstanceType))
             {
                 switch (dependency.Key)
                 {

@@ -1,5 +1,6 @@
 ﻿using AnyBind.Attributes;
 using AnyBind.Internal;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -314,6 +315,8 @@ namespace AnyBind.Tests
 
     public class SubscribableHandlerTests
     {
+        private Mock<DependencyManager> DependencyManager = new Mock<AnyBind.DependencyManager>();
+
         private void SetupTestClasses()
         {
             var class1Registration = new Dictionary<DependencyBase, List<string>>();
@@ -350,10 +353,14 @@ namespace AnyBind.Tests
             class4Registration.Add(new PropertyDependency("Sub.Calculation"), new List<string>() { "Calculation" });
             class4Registration.Add(new PropertyDependency("Sub"), new List<string>() { "Sub.Calculation" });
 
-            DependencyManager.Registrations.TryAdd(typeof(TestClass1), class1Registration);
-            DependencyManager.Registrations.TryAdd(typeof(TestClass2), class2Registration);
-            DependencyManager.Registrations.TryAdd(typeof(TestClass3), class3Registration);
-            DependencyManager.Registrations.TryAdd(typeof(GeneralSubscribable), class4Registration);
+            DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass1)))
+                .Returns(class1Registration);
+            DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass2)))
+                .Returns(class2Registration);
+            DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass3)))
+                .Returns(class3Registration);
+            DependencyManager.Setup(dm => dm.GetRegistrations(typeof(GeneralSubscribable)))
+                .Returns(class4Registration);
         }
 
         private Dictionary<string, int> GetCallCountsDict()
@@ -395,7 +402,7 @@ namespace AnyBind.Tests
             SetupTestClasses();
 
             TestClass2 testClass = new TestClass2();
-            SubscribableHandler handler = new SubscribableHandler(testClass);
+            SubscribableHandler handler = new SubscribableHandler(DependencyManager.Object, testClass);
 
             Dictionary<string, int> callCounts = new Dictionary<string, int>();
             callCounts.Add("Num1", 0);
@@ -429,7 +436,7 @@ namespace AnyBind.Tests
 
             TestClass2 testClass = new TestClass2();
             TestClass1 testClass1 = new TestClass1();
-            SubscribableHandler handler = new SubscribableHandler(testClass);
+            SubscribableHandler handler = new SubscribableHandler(DependencyManager.Object, testClass);
 
             Dictionary<string, int> callCounts = GetCallCountsDict();
 
@@ -467,7 +474,7 @@ namespace AnyBind.Tests
             TestClass2 testClass = new TestClass2();
             TestClass1 testClass1a = new TestClass1();
             TestClass1 testClass1b = new TestClass1();
-            SubscribableHandler handler = new SubscribableHandler(testClass);
+            SubscribableHandler handler = new SubscribableHandler(DependencyManager.Object, testClass);
 
             Dictionary<string, int> callCounts = GetCallCountsDict();
 
@@ -513,7 +520,7 @@ namespace AnyBind.Tests
             SetupTestClasses();
 
             TestClass3 testClass = new TestClass3();
-            var handler = new SubscribableHandler(testClass);
+            var handler = new SubscribableHandler(DependencyManager.Object, testClass);
 
             Dictionary<string, int> callCounts = new Dictionary<string, int>();
             callCounts.Add("Double", 0);
@@ -545,7 +552,7 @@ namespace AnyBind.Tests
             TestClass2 testClass = new TestClass2();
             TestClass1 testClass1 = new TestClass1();
             testClass.Class1 = testClass1;
-            SubscribableHandler handler = new SubscribableHandler(testClass);
+            SubscribableHandler handler = new SubscribableHandler(DependencyManager.Object, testClass);
 
             Dictionary<string, int> callCounts = GetCallCountsDict();
 
@@ -593,7 +600,7 @@ namespace AnyBind.Tests
 
             TestClass2 testClass = new TestClass2();
             TestClass4 testClass4 = new TestClass4();
-            SubscribableHandler handler = new SubscribableHandler(testClass);
+            SubscribableHandler handler = new SubscribableHandler(DependencyManager.Object, testClass);
 
             Dictionary<string, int> callCounts = GetCallCountsDict();
 
