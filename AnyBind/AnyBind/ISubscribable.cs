@@ -10,5 +10,7 @@ namespace AnyBind
         object GetPropertyValue(string propertyPath);
 
         void RaisePropertyChanged(PropertyChangedEventArgs e);
+
+        Type GetSubscribableType();
     }
 }

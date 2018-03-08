@@ -72,5 +72,7 @@ namespace AnyBind.Internal
                 return subscribable;
             return new GeneralSubscribable(obj);
         }
+
+        public Type GetSubscribableType() => InstanceType;
     }
 }

@@ -23,6 +23,8 @@ namespace AnyBind.Tests
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public Type GetSubscribableType() => GetType();
+
         public void RaisePropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
@@ -98,6 +100,8 @@ namespace AnyBind.Tests
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public Type GetSubscribableType() => GetType();
 
         private void OnPropertyChanged(string propertyName)
         {
@@ -202,8 +206,7 @@ namespace AnyBind.Tests
     public class TestClass3 : ISubscribable
     {
         private double _Value = 0;
-
-
+        
         /* Simulated dependency:
         [DependsOn("Half", "Value")]
         */
@@ -244,6 +247,8 @@ namespace AnyBind.Tests
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public Type GetSubscribableType() => GetType();
 
         public object GetPropertyValue(string propertyName)
         {
@@ -359,7 +364,7 @@ namespace AnyBind.Tests
                 .Returns(class2Registration);
             DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass3)))
                 .Returns(class3Registration);
-            DependencyManager.Setup(dm => dm.GetRegistrations(typeof(GeneralSubscribable)))
+            DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass4)))
                 .Returns(class4Registration);
         }
 

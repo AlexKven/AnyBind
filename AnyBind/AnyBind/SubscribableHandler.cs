@@ -23,7 +23,7 @@ namespace AnyBind
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
 
-            foreach (var dependency in manager.GetRegistrations(InstanceType))
+            foreach (var dependency in manager.GetRegistrations(instance.GetSubscribableType()))
             {
                 switch (dependency.Key)
                 {
