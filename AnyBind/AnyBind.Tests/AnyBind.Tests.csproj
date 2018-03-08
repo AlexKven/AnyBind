@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BindingManagerTests.cs" />
+    <Compile Include="DependencyManagerTests.cs" />
     <Compile Include="HelpersTests.cs" />
     <Compile Include="Internal\GeneralSubscribableTests.cs" />
     <Compile Include="Internal\StringHelpersTests.cs" />

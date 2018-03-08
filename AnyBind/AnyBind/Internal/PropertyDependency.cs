@@ -17,5 +17,19 @@ namespace AnyBind.Internal
         {
             throw new NotImplementedException();
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is PropertyDependency pd)
+            {
+                return pd.PropertyName == PropertyName;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return PropertyName.GetHashCode();
+        }
     }
 }

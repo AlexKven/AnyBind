@@ -15,6 +15,9 @@ namespace AnyBind
         private ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>> Registrations
             = new ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>>();
 
+        private Dictionary<Type, Dictionary<DependencyBase, Dictionary<string, Type>>> PreRegistrations
+            = new Dictionary<Type, Dictionary<DependencyBase, Dictionary<string, Type>>>();
+
         private List<SubscribableHandler> SetupInstances = new List<SubscribableHandler>();
 
         public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
@@ -24,48 +27,39 @@ namespace AnyBind
             return result;
         }
 
+        internal virtual Dictionary<DependencyBase, Dictionary<string, Type>> GetPreRegistrations(Type type)
+         => PreRegistrations[type];
+
         public void RegisterClass(Type type)
         {
             var typeInfo = type.GetTypeInfo();
 
-            var propertyRegistrations = new Dictionary<DependencyBase, List<string>>();
+            var propertyPreRegistrations = new Dictionary<DependencyBase, Dictionary<string, Type>>();
             foreach (var property in typeInfo.DeclaredProperties)
             {
-                SortedSet<string> dependsOn = new SortedSet<string>();
-
-                void AddDependency(string path)
-                {
-                    while (path != "")
-                    {
-                        dependsOn.Add(path);
-                        if (path.Contains("."))
-                            path = path.Substring(0, path.LastIndexOf("."));
-                        else
-                            path = "";
-                    }
-                }
+                Dictionary<string, Type> dependsOn = new Dictionary<string, Type>();
 
                 foreach (var att in property.GetCustomAttributes<DependsOnAttribute>())
                 {
                     foreach (var prop in att.PropertyPaths)
-                        AddDependency(prop);
+                        dependsOn.Add(prop, ReflectionHelpers.GetTypeOfPath(type, prop.DisassemblePropertyPath()));
                 }
 
-                foreach (var path in dependsOn)
+                foreach (var pathNType in dependsOn)
                 {
                     var dependency = new PropertyDependency(property.Name);
-                    if (propertyRegistrations.TryGetValue(dependency, out var dependencies))
-                        dependencies.Add(property.Name);
+                    if (propertyPreRegistrations.TryGetValue(dependency, out var dependencies))
+                        dependencies.Add(pathNType.Key, pathNType.Value);
                     else
-                        propertyRegistrations[dependency] = new List<string>() { property.Name };
+                        propertyPreRegistrations[dependency] = new Dictionary<string, Type>() { { pathNType.Key, pathNType.Value } };
                 }
             }
-            Registrations.TryAdd(type, propertyRegistrations);
+            PreRegistrations.Add(type, propertyPreRegistrations);
         }
 
-        public static void SetupBindings(object instance)
-        {
-            
-        }
+            //public static void SetupBindings(object instance)
+            //{
+
+            //}
     }
 }
