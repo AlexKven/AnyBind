@@ -19,6 +19,8 @@ namespace AnyBind.Tests
 
             [DependsOn("Int1", "Int2", "Test2.Calculation")]
             public int Calculation { get; set; }
+            [DependsOn("Int1", "Test2.Str2")]
+            public int Calculation2 { get; set; }
         }
 
         public class TestClass2
@@ -32,6 +34,7 @@ namespace AnyBind.Tests
         
         [Theory]
         [InlineData(typeof(TestClass1), "Calculation", "Int1", typeof(int), "Int2", typeof(int), "Test2.Calculation", typeof(object))]
+        [InlineData(typeof(TestClass1), "Calculation2", "Int1", typeof(int), "Test2.Str2", typeof(string))]
         public void RegisterClass(Type type, string propertyDependency, params object[] expectedPreRegistrations)
         {
             var manager = new DependencyManager();
