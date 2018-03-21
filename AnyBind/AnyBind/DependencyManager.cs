@@ -57,6 +57,47 @@ namespace AnyBind
             PreRegistrations.Add(type, propertyPreRegistrations);
         }
 
+        public void FinalizeRegistrations()
+        {
+            foreach (var typeRegistration in PreRegistrations)
+            {
+                Dictionary<string, List<string>> dependencies = new Dictionary<string, List<string>>();
+                void addDependency(string propertyPath, string dependent)
+                {
+                    if (dependencies.TryGetValue(propertyPath, out var list))
+                    {
+                        if (!list.Contains(dependent))
+                            list.Add(dependent);
+                    }
+                    else
+                        dependencies.Add(propertyPath, new List<string>() { dependent });
+                }
+
+                foreach (var dependency in typeRegistration.Value)
+                {
+                    switch (dependency.Key)
+                    {
+                        case PropertyDependency pd:
+                            foreach (var dependentOn in dependency.Value)
+                            {
+                                addDependency(pd.PropertyName, dependentOn.Key);
+                                var chainL = dependentOn.Key.DisassemblePropertyPath();
+                                var chainR = chainL;
+                                var length = chainL.Count();
+                                while (length > 1)
+                                {
+                                    chainR = chainR.Take(length - 1);
+                                    addDependency(chainL.ReassemblePropertyPath(), chainR.ReassemblePropertyPath());
+                                    chainL = chainL.Take(length - 1);
+                                    length--;
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+
             //public static void SetupBindings(object instance)
             //{
 

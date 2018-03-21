@@ -54,6 +54,8 @@ namespace AnyBind.Tests
             {
                 Assert.Equal(expected: expectedDict[dependency.Key], actual: dependency.Value);
             }
+
+            manager.FinalizeRegistrations();
         }
     }
 }
