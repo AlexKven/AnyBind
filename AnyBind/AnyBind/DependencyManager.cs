@@ -12,23 +12,13 @@ namespace AnyBind
 {
     public class DependencyManager
     {
-        private ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>> Registrations
+        protected ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>> Registrations
             = new ConcurrentDictionary<Type, Dictionary<DependencyBase, List<string>>>();
 
-        private Dictionary<Type, Dictionary<DependencyBase, Dictionary<string, Type>>> PreRegistrations
+        protected Dictionary<Type, Dictionary<DependencyBase, Dictionary<string, Type>>> PreRegistrations
             = new Dictionary<Type, Dictionary<DependencyBase, Dictionary<string, Type>>>();
 
         private List<SubscribableHandler> SetupInstances = new List<SubscribableHandler>();
-
-        public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
-        {
-            if (!Registrations.TryGetValue(type, out var result))
-                throw new KeyNotFoundException($"No such class as {type} was registered.");
-            return result;
-        }
-
-        internal virtual Dictionary<DependencyBase, Dictionary<string, Type>> GetPreRegistrations(Type type)
-         => PreRegistrations[type];
 
         public void RegisterClass(Type type)
         {

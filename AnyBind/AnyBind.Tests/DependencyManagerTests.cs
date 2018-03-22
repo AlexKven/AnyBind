@@ -31,13 +31,13 @@ namespace AnyBind.Tests
             [DependsOn("Str1", "Str2")]
             public object Calculation { get; set; }
         }
-        
+
         [Theory]
         [InlineData(typeof(TestClass1), "Calculation", "Int1", typeof(int), "Int2", typeof(int), "Test2.Calculation", typeof(object))]
         [InlineData(typeof(TestClass1), "Calculation2", "Int1", typeof(int), "Test2.Str2", typeof(string))]
         public void RegisterClass(Type type, string propertyDependency, params object[] expectedPreRegistrations)
         {
-            var manager = new DependencyManager();
+            var manager = new TestDependencyManager();
             var expectedDict = new Dictionary<string, Type>();
             for (int i = 0; i < expectedPreRegistrations.Length; i += 2)
             {
