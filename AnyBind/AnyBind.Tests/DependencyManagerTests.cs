@@ -74,5 +74,29 @@ namespace AnyBind.Tests
                 Assert.Equal(expected: expectedDict[dependency.Key], actual: dependency.Value);
             }
         }
+
+        [Theory]
+        [InlineData(typeof(TestClass1), "Calculation", "Int1", "Int2", "Test2.Calculation")]
+        [InlineData(typeof(TestClass1), "Test2.Calculation", "Test2")]
+        [InlineData(typeof(TestClass2), "Calculation", "Str1", "Str2")]
+        public void FinalizeRegistrations(Type type, string propertyDependency, params string[] expectedRegistrations)
+        {
+            var manager = new TestDependencyManager();
+            SetupPreRegistrations(manager, type);
+
+            manager.FinalizeRegistrations();
+
+            var registrations = manager.GetRegistrations(type);
+            var dependencies = registrations[new PropertyDependency(propertyDependency)];
+            Assert.Equal(expected: expectedRegistrations.Length, actual: dependencies.Count);
+
+            var expectedList = expectedRegistrations.ToList();
+            foreach (var dependency in dependencies)
+            {
+                Assert.Contains(dependency, expectedList);
+                expectedList.Remove(dependency);
+            }
+            Assert.Empty(expectedList);
+        }
     }
 }

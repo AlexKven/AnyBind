@@ -20,7 +20,7 @@ namespace AnyBind
 
         private List<SubscribableHandler> SetupInstances = new List<SubscribableHandler>();
 
-        public Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
+        public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
         {
             if (!Registrations.TryGetValue(type, out var result))
                 throw new KeyNotFoundException($"No such class as {type} was registered.");
