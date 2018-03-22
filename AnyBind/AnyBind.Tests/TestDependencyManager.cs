@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AnyBind.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,11 +10,29 @@ namespace AnyBind.Tests
     public class TestDependencyManager : DependencyManager
     {
 
-        public Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
+
+        public void AddPreRegistration(Type type, string dependency, string dependsOn, Type dependsOnType)
         {
-            if (!Registrations.TryGetValue(type, out var result))
-                throw new KeyNotFoundException($"No such class as {type} was registered.");
-            return result;
+            Dictionary<DependencyBase, Dictionary<string, Type>> registration;
+            if (!PreRegistrations.TryGetValue(type, out registration))
+            {
+                registration = new Dictionary<DependencyBase, Dictionary<string, Type>>();
+                PreRegistrations.Add(type, registration);
+            }
+
+            var dependencyRegistration = registration.FirstOrDefault
+                (kvp => (kvp.Key as PropertyDependency)?.PropertyName == dependency).Value;
+            if (dependencyRegistration == null)
+            {
+                dependencyRegistration = new Dictionary<string, Type>();
+                registration.Add(new PropertyDependency(dependency), dependencyRegistration);
+            }
+
+            if (dependencyRegistration.ContainsKey(dependsOn))
+                dependencyRegistration[dependsOn] = dependsOnType;
+            else
+                dependencyRegistration.Add(dependsOn, dependsOnType);
+
         }
 
         internal virtual Dictionary<DependencyBase, Dictionary<string, Type>> GetPreRegistrations(Type type)

@@ -32,9 +32,28 @@ namespace AnyBind.Tests
             public object Calculation { get; set; }
         }
 
+        private void SetupPreRegistrations(TestDependencyManager manager, Type type)
+        {
+            switch (type.Name)
+            {
+                case "TestClass1":
+                    manager.AddPreRegistration(type, "Calculation", "Int1", typeof(int));
+                    manager.AddPreRegistration(type, "Calculation", "Int2", typeof(int));
+                    manager.AddPreRegistration(type, "Calculation", "Test2.Calculation", typeof(object));
+                    manager.AddPreRegistration(type, "Calculation2", "Int1", typeof(int));
+                    manager.AddPreRegistration(type, "Calculation2", "Test2.Str2", typeof(string));
+                    break;
+                case "TestClass2":
+                    manager.AddPreRegistration(type, "Calculation", "Str1", typeof(string));
+                    manager.AddPreRegistration(type, "Calculation", "Str2", typeof(string));
+                    break;
+            }
+        }
+
         [Theory]
         [InlineData(typeof(TestClass1), "Calculation", "Int1", typeof(int), "Int2", typeof(int), "Test2.Calculation", typeof(object))]
         [InlineData(typeof(TestClass1), "Calculation2", "Int1", typeof(int), "Test2.Str2", typeof(string))]
+        [InlineData(typeof(TestClass2), "Calculation", "Str1", typeof(string), "Str2", typeof(string))]
         public void RegisterClass(Type type, string propertyDependency, params object[] expectedPreRegistrations)
         {
             var manager = new TestDependencyManager();
@@ -44,7 +63,8 @@ namespace AnyBind.Tests
                 expectedDict.Add((string)expectedPreRegistrations[i], (Type)expectedPreRegistrations[i + 1]);
             }
 
-            manager.RegisterClass(type);
+            //manager.RegisterClass(type);
+            SetupPreRegistrations(manager, type);
 
             var registrations = manager.GetPreRegistrations(type);
             var dependencies = registrations[new PropertyDependency(propertyDependency)];
@@ -54,8 +74,6 @@ namespace AnyBind.Tests
             {
                 Assert.Equal(expected: expectedDict[dependency.Key], actual: dependency.Value);
             }
-
-            manager.FinalizeRegistrations();
         }
     }
 }
