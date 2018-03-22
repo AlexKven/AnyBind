@@ -63,8 +63,7 @@ namespace AnyBind.Tests
                 expectedDict.Add((string)expectedPreRegistrations[i], (Type)expectedPreRegistrations[i + 1]);
             }
 
-            //manager.RegisterClass(type);
-            SetupPreRegistrations(manager, type);
+            manager.RegisterClass(type);
 
             var registrations = manager.GetPreRegistrations(type);
             var dependencies = registrations[new PropertyDependency(propertyDependency)];
