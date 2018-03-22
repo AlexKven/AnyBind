@@ -27,6 +27,12 @@ namespace AnyBind
             return result;
         }
 
+        public void InitializeInstance(object instance)
+        {
+            var subscribable = GeneralSubscribable.CreateSubscribable(instance);
+            var handler = new SubscribableHandler(this, subscribable);
+        }
+
         public void RegisterClass(Type type)
         {
             var typeInfo = type.GetTypeInfo();
