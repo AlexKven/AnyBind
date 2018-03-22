@@ -95,6 +95,14 @@ namespace AnyBind
                             break;
                     }
                 }
+
+                var registration = new Dictionary<DependencyBase, List<string>>();
+                foreach (var dependency in dependencies)
+                {
+                    registration.Add(new PropertyDependency(dependency.Key), dependency.Value);
+                }
+
+                Registrations.TryAdd(typeRegistration.Key, registration);
             }
         }
 
