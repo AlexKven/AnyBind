@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Moq;
 using Xunit;
 
-namespace AnyBind.Tests
+namespace AnyBind.Tests.UnitTests
 {
 	public class WeakEventSubscriberTests
 	{

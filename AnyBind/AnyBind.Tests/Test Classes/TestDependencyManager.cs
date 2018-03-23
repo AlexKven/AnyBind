@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AnyBind.Tests
+namespace AnyBind.Tests.TestClasses
 {
     public class TestDependencyManager : DependencyManager
     {

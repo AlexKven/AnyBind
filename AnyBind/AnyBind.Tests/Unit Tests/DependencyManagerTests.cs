@@ -1,5 +1,6 @@
 ﻿using AnyBind.Attributes;
 using AnyBind.Internal;
+using AnyBind.Tests.TestClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace AnyBind.Tests
+namespace AnyBind.Tests.UnitTests
 {
     public class DependencyManagerTests
     {

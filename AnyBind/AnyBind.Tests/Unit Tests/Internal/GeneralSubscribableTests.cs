@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace AnyBind.Tests.Internal
+namespace AnyBind.Tests.UnitTests.Internal
 {
     public class GeneralSubscribableTests
     {

@@ -69,16 +69,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BindingManagerTests.cs" />
-    <Compile Include="DependencyManagerTests.cs" />
-    <Compile Include="HelpersTests.cs" />
-    <Compile Include="Internal\GeneralSubscribableTests.cs" />
-    <Compile Include="Internal\StringHelpersTests.cs" />
+    <Compile Include="Unit Tests\BindingManagerTests.cs" />
+    <Compile Include="Unit Tests\DependencyManagerTests.cs" />
+    <Compile Include="Unit Tests\HelpersTests.cs" />
+    <Compile Include="Unit Tests\Internal\GeneralSubscribableTests.cs" />
+    <Compile Include="Unit Tests\Internal\StringHelpersTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Internal\ReflectionHelpersTests.cs" />
-    <Compile Include="SubscribableHandlerTests.cs" />
-    <Compile Include="TestDependencyManager.cs" />
-    <Compile Include="WeakEventSubscriberTests.cs" />
+    <Compile Include="Unit Tests\Internal\ReflectionHelpersTests.cs" />
+    <Compile Include="Unit Tests\SubscribableHandlerTests.cs" />
+    <Compile Include="Test Classes\TestDependencyManager.cs" />
+    <Compile Include="Unit Tests\WeakEventSubscriberTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AnyBind\AnyBind.csproj">
@@ -100,7 +100,9 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Integration Tests\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

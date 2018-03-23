@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace AnyBind.Tests
+namespace AnyBind.Tests.UnitTests
 {
     public class TestClass1 : ISubscribable
     {
