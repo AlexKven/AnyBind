@@ -78,7 +78,7 @@ namespace AnyBind.Tests.UnitTests.Internal
         [InlineData("Str1", typeof(string), "One")]
         [InlineData("Str2", typeof(string), "Two")]
         [InlineData("Str3", typeof(string), "Three")]
-        [InlineData("T1", typeof(Test1), "AnyBind.Tests.Internal.GeneralSubscribableTests+Test1")]
+        [InlineData("T1", typeof(Test1), "AnyBind.Tests.UnitTests.Internal.GeneralSubscribableTests+Test1")]
         [InlineData("T1.Int1", typeof(int), "1")]
         [InlineData("T1.Int2", typeof(int), "4")]
         [InlineData("T1.Int3", typeof(int), "9")]

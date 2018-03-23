@@ -69,6 +69,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Integration Tests\UsageTests.cs" />
+    <Compile Include="Test Classes\TestViewModel1.cs" />
     <Compile Include="Unit Tests\BindingManagerTests.cs" />
     <Compile Include="Unit Tests\DependencyManagerTests.cs" />
     <Compile Include="Unit Tests\HelpersTests.cs" />
@@ -100,9 +102,7 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Integration Tests\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

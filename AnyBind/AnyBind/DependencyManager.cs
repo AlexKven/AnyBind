@@ -31,6 +31,7 @@ namespace AnyBind
         {
             var subscribable = GeneralSubscribable.CreateSubscribable(instance);
             var handler = new SubscribableHandler(this, subscribable);
+            SetupInstances.Add(handler);
         }
 
         public void RegisterClass(Type type)
