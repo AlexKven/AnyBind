@@ -328,35 +328,70 @@ namespace AnyBind.Tests.UnitTests
             var class2Registration = new Dictionary<DependencyBase, List<string>>();
             var class3Registration = new Dictionary<DependencyBase, List<string>>();
             var class4Registration = new Dictionary<DependencyBase, List<string>>();
-            
-            class2Registration.Add(new PropertyDependency("Num1"), new List<string>() { "Calculation" });
-            class2Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
-            class2Registration.Add(new PropertyDependency("Class1.Num1"), new List<string>() { "Calculation" });
-            class2Registration.Add(new PropertyDependency("Class1.Num2"), new List<string>() { "Calculation" });
-            class2Registration.Add(new PropertyDependency("Class1[\"One\"].Num1"), new List<string>() { "Indexer" });
-            class2Registration.Add(new PropertyDependency("Class1[\"Two\"].Num1"), new List<string>() { "Indexer" });
-            class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>].Num2"), new List<string>() { "BoundIndexer" });
-            class2Registration.Add(new PropertyDependency("Class4.Calculation"), new List<string>() { "Calculation4" });
+
+            class2Registration.SafeAddToDictionaryOfList("Calculation".ToPropertyDependency(), "Num1");
+            class2Registration.SafeAddToDictionaryOfList("Calculation".ToPropertyDependency(), "Num2");
+            class2Registration.SafeAddToDictionaryOfList("Calculation".ToPropertyDependency(), "Class1.Num1");
+            class2Registration.SafeAddToDictionaryOfList("Calculation".ToPropertyDependency(), "Class1.Num2");
+            class2Registration.SafeAddToDictionaryOfList("Indexer".ToPropertyDependency(), "Class1[\"One\"].Num1");
+            class2Registration.SafeAddToDictionaryOfList("Indexer".ToPropertyDependency(), "Class1[\"Two\"].Num1");
+            class2Registration.SafeAddToDictionaryOfList("BoundIndexer".ToPropertyDependency(), "Class1[<Class1.Str>].Num2");
+            class2Registration.SafeAddToDictionaryOfList("Calculation4".ToPropertyDependency(), "Class4.Calculation");
+
+            //class2Registration.Add(new PropertyDependency("Num1"), new List<string>() { "Calculation" });
+            //class2Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
+            //class2Registration.Add(new PropertyDependency("Class1.Num1"), new List<string>() { "Calculation" });
+            //class2Registration.Add(new PropertyDependency("Class1.Num2"), new List<string>() { "Calculation" });
+            //class2Registration.Add(new PropertyDependency("Class1[\"One\"].Num1"), new List<string>() { "Indexer" });
+            //class2Registration.Add(new PropertyDependency("Class1[\"Two\"].Num1"), new List<string>() { "Indexer" });
+            //class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>].Num2"), new List<string>() { "BoundIndexer" });
+            //class2Registration.Add(new PropertyDependency("Class4.Calculation"), new List<string>() { "Calculation4" });
 
             // These should be implicitly added
-            class2Registration.Add(new PropertyDependency("Class1"), new List<string>() { "Class1.Num2", "Class1.Num1", "Class1[<Class1.Str>]", "Class1[\"One\"]", "Class1[\"Two\"]" });
-            class2Registration.Add(new PropertyDependency("Class1.Str"), new List<string>() { "Class1[<Class1.Str>]" });
-            class2Registration.Add(new PropertyDependency("Class1[\"One\"]"), new List<string>() { "Class1[\"One\"].Num1" });
-            class2Registration.Add(new PropertyDependency("Class1[\"Two\"]"), new List<string>() { "Class1[\"Two\"].Num1" });
-            class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>]"), new List<string>() { "Class1[<Class1.Str>].Num2" });
-            class2Registration.Add(new PropertyDependency("Class4"), new List<string>() { "Class4.Calculation" });
-            class2Registration.Add(new PropertyDependency("Class4.Num1"), new List<string>() { "Class4.Calculation" });
-            class2Registration.Add(new PropertyDependency("Class4.Num2"), new List<string>() { "Class4.Calculation" });
-            class2Registration.Add(new PropertyDependency("Class4.Sub"), new List<string>() { "Class4.Calculation" });
+            class4Registration.SafeAddToDictionaryOfList("".ToPropertyDependency(), "");
 
-            class3Registration.Add(new PropertyDependency("Double"), new List<string>() { "Half", "Value" });
-            class3Registration.Add(new PropertyDependency("Half"), new List<string>() { "Double", "Value" });
-            class3Registration.Add(new PropertyDependency("Value"), new List<string>() { "Half", "Double" });
+            class2Registration.SafeAddToDictionaryOfList("Class1.Num2".ToPropertyDependency(), "Class1");
+            class2Registration.SafeAddToDictionaryOfList("Class1.Num1".ToPropertyDependency(), "Class1");
+            class2Registration.SafeAddToDictionaryOfList("Class1[<Class1.Str>]".ToPropertyDependency(), "Class1");
+            class2Registration.SafeAddToDictionaryOfList("Class1[\"One\"]".ToPropertyDependency(), "Class1");
+            class2Registration.SafeAddToDictionaryOfList("Class1[\"Two\"]".ToPropertyDependency(), "Class1");
 
-            class4Registration.Add(new PropertyDependency("Num1"), new List<string>() { "Calculation" });
-            class4Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
-            class4Registration.Add(new PropertyDependency("Sub.Calculation"), new List<string>() { "Calculation" });
-            class4Registration.Add(new PropertyDependency("Sub"), new List<string>() { "Sub.Calculation" });
+            class2Registration.SafeAddToDictionaryOfList("Class1[<Class1.Str>]".ToPropertyDependency(), "Class1.Str");
+
+            class2Registration.SafeAddToDictionaryOfList("Class1[\"One\"].Num1".ToPropertyDependency(), "Class1[\"One\"]");
+
+            class2Registration.SafeAddToDictionaryOfList("Class1[\"Two\"].Num1".ToPropertyDependency(), "Class1[\"Two\"]");
+
+            class2Registration.SafeAddToDictionaryOfList("Class1[<Class1.Str>].Num2".ToPropertyDependency(), "Class1[<Class1.Str>]");
+
+            class2Registration.SafeAddToDictionaryOfList("Class4.Calculation".ToPropertyDependency(), "Class4", "Class4.Num1", "Class4.Num2", "Class4.Sub");
+
+            class3Registration.SafeAddToDictionaryOfList("Value".ToPropertyDependency(), "Half", "Double");
+            class3Registration.SafeAddToDictionaryOfList("Half".ToPropertyDependency(), "Value", "Double");
+            class3Registration.SafeAddToDictionaryOfList("Double".ToPropertyDependency(), "Half", "Value");
+
+            class4Registration.SafeAddToDictionaryOfList("Calculation".ToPropertyDependency(), "Num1", "Num2", "Sub.Calculation");
+            class4Registration.SafeAddToDictionaryOfList("Sub.Calculation".ToPropertyDependency(), "Sub");
+
+
+            //class2Registration.Add(new PropertyDependency("Class1"), new List<string>() { "Class1.Num2", "Class1.Num1", "Class1[<Class1.Str>]", "Class1[\"One\"]", "Class1[\"Two\"]" });
+            //class2Registration.Add(new PropertyDependency("Class1.Str"), new List<string>() { "Class1[<Class1.Str>]" });
+            //class2Registration.Add(new PropertyDependency("Class1[\"One\"]"), new List<string>() { "Class1[\"One\"].Num1" });
+            //class2Registration.Add(new PropertyDependency("Class1[\"Two\"]"), new List<string>() { "Class1[\"Two\"].Num1" });
+            //class2Registration.Add(new PropertyDependency("Class1[<Class1.Str>]"), new List<string>() { "Class1[<Class1.Str>].Num2" });
+            //class2Registration.Add(new PropertyDependency("Class4"), new List<string>() { "Class4.Calculation" });
+            //class2Registration.Add(new PropertyDependency("Class4.Num1"), new List<string>() { "Class4.Calculation" });
+            //class2Registration.Add(new PropertyDependency("Class4.Num2"), new List<string>() { "Class4.Calculation" });
+            //class2Registration.Add(new PropertyDependency("Class4.Sub"), new List<string>() { "Class4.Calculation" });
+
+            //class3Registration.Add(new PropertyDependency("Double"), new List<string>() { "Half", "Value" });
+            //class3Registration.Add(new PropertyDependency("Half"), new List<string>() { "Double", "Value" });
+            //class3Registration.Add(new PropertyDependency("Value"), new List<string>() { "Half", "Double" });
+
+            //class4Registration.Add(new PropertyDependency("Num1"), new List<string>() { "Calculation" });
+            //class4Registration.Add(new PropertyDependency("Num2"), new List<string>() { "Calculation" });
+            //class4Registration.Add(new PropertyDependency("Sub.Calculation"), new List<string>() { "Calculation" });
+            //class4Registration.Add(new PropertyDependency("Sub"), new List<string>() { "Sub.Calculation" });
 
             DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass1)))
                 .Returns(class1Registration);

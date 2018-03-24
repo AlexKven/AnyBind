@@ -17,7 +17,6 @@ namespace AnyBind.Tests.Test_Classes
         }
 
         private int _FirstInt = 0;
-        [DependsOn("Multiplication")]
         public int FirstInt
         {
             get => _FirstInt;
@@ -29,7 +28,6 @@ namespace AnyBind.Tests.Test_Classes
         }
 
         private int _SecondInt = 0;
-        [DependsOn("Multiplication")]
         public int SecondInt
         {
             get => _SecondInt;
@@ -40,7 +38,7 @@ namespace AnyBind.Tests.Test_Classes
             }
         }
 
-        //[DependsOn("FirstInt", "SecondInt")]
+        [DependsOn("FirstInt", "SecondInt")]
         public int Multiplication => FirstInt * SecondInt;
     }
 }

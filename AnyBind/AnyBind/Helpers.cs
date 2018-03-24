@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AnyBind
@@ -54,6 +55,18 @@ namespace AnyBind
                 search(item);
             }
             return result;
+        }
+
+        internal static void SafeAddToDictionaryOfList<TKey, TList>(this Dictionary<TKey, List<TList>> dict, TKey key, params TList[] items)
+        {
+            if (dict.TryGetValue(key, out var list))
+            {
+                list.AddRange(items);
+            }
+            else
+            {
+                dict.Add(key, items.ToList());
+            }
         }
     }
 }

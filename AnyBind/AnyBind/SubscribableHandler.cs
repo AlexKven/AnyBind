@@ -29,7 +29,8 @@ namespace AnyBind
                 {
                     case PropertyDependency propertyDependency:
                         var name = propertyDependency.PropertyName;
-                        PropertyDependencies.Add(name, dependency.Value);
+                        foreach (var str in dependency.Value)
+                            PropertyDependencies.SafeAddToDictionaryOfList(str, name);
                         break;
                 }
             }

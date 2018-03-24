@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="Integration Tests\UsageTests.cs" />
     <Compile Include="Test Classes\TestViewModel1.cs" />
+    <Compile Include="TestHelpers.cs" />
     <Compile Include="Unit Tests\BindingManagerTests.cs" />
     <Compile Include="Unit Tests\DependencyManagerTests.cs" />
     <Compile Include="Unit Tests\HelpersTests.cs" />

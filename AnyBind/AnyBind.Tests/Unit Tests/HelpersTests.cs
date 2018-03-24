@@ -45,5 +45,22 @@ namespace AnyBind.Tests.UnitTests
 
             Assert.True(result.SequenceEqual(expectedSorted));
         }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        void SafeAddToDictionaryOfListTests(bool emptyDict)
+        {
+            // Arrange
+            var dict = new Dictionary<int, List<String>>();
+            if (!emptyDict)
+                dict.Add(703, new List<string>() { "Seven", "Zero" });
+
+            // Act
+            dict.SafeAddToDictionaryOfList(703, "Three");
+
+            // Assert
+            Assert.Contains("Three", dict[703]);
+        }
     }
 }
