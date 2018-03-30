@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
+[assembly:InternalsVisibleTo("AnyBind.Tests")]
 namespace AnyBind
 {
     public class DependencyManager
@@ -29,6 +31,8 @@ namespace AnyBind
 
         public void InitializeInstance(object instance)
         {
+            if (AutoCleanup)
+                CleanupInstances();
             var subscribable = GeneralSubscribable.CreateSubscribable(instance);
             var handler = new SubscribableHandler(this, subscribable);
             SetupInstances.Add(handler);
@@ -110,9 +114,11 @@ namespace AnyBind
             }
         }
 
-            //public static void SetupBindings(object instance)
-            //{
+        public bool AutoCleanup { get; set; } = true;
 
-            //}
+        public void CleanupInstances()
+        {
+            SetupInstances.RemoveAll(sh => !sh.IsAlive);
+        }
     }
 }
