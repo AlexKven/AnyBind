@@ -195,5 +195,13 @@ namespace AnyBind
             result.Remove(propertyPath);
             return result;
         }
+
+        public bool IsAlive
+        {
+            get
+            {
+                return Instance.TryGetTarget(out _);
+            }
+        }
     }
 }

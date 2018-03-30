@@ -17,20 +17,22 @@ namespace AnyBind.Tests.Integration_Tests
             manager.RegisterClass(typeof(TestViewModel1));
             manager.FinalizeRegistrations();
 
+            int count = 0;
+
             TestViewModel1 viewModel = new Test_Classes.TestViewModel1();
-            viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            viewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == "Multiplication")
+                {
+                    count++;
+                }
+            };
             manager.InitializeInstance(viewModel);
 
             viewModel.FirstInt = 5;
             viewModel.SecondInt = 6;
-        }
 
-        private void ViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "Multiplication")
-            {
-
-            }
+            Assert.Equal(expected: 2, actual: count);
         }
     }
 }
