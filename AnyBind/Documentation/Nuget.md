@@ -1,5 +1,9 @@
+
+<span style="color:red">**NOTE:** This is an early release and functionality is very much limited. Certain property subscriptions are not yet finished. Missing features are denoted by a **Coming Soon!**</span>
+
 # What is AnyBind?
-AnyBind is a library for .NET that uses custom attributes to specify a dependency chain for ordinary CLR properties on classes. This allows you to take a class that implements ```INotifyPropertyChanged```, and make certain properties dependent on other properties, either in the object or in a sub property of the object. ```PropertyChanged``` will then fire for the dependent property whenever a property it depends on changes. For example:
+AnyBind is a library for .NET that uses custom attributes to specify a dependency chain for ordinary CLR properties on classes. This allows you to take a class that implements ```INotifyPropertyChanged```, and make certain properties dependent on other properties, either in the object or in a sub property of the object.
+```PropertyChanged``` will then fire for the dependent property whenever a property it depends on changes. For example:
 ```C#
     public class Multiplier: INotifyPropertyChanged
     {
