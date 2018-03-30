@@ -41,4 +41,38 @@ namespace AnyBind.Tests.Test_Classes
         [DependsOn("FirstInt", "SecondInt")]
         public int Multiplication => FirstInt * SecondInt;
     }
+
+    public class TestViewModel2 : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private TestViewModel1 _Base = new TestViewModel1();
+        public TestViewModel1 Base
+        {
+            get => _Base;
+            set
+            {
+                _Base = value;
+                OnPropertyChanged(nameof(Base));
+            }
+        }
+
+        private int _ToAdd = 0;
+        public int ToAdd
+        {
+            get => _ToAdd;
+            set
+            {
+                _ToAdd = value;
+                OnPropertyChanged(nameof(ToAdd));
+            }
+        }
+
+        [DependsOn("ToAdd", "Base.Multiplication")]
+        public int Addition => ToAdd + Base.Multiplication;
+    }
 }
