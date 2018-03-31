@@ -40,6 +40,12 @@ namespace AnyBind
             CachePropertyPath("", instance);
         }
 
+        public void Unsubscribe()
+        {
+            UnCachePropertyPath("");
+            ChangeHandlerDelegates.Clear();
+        }
+
         bool TryGetSubscribablePropertyCache(string propertyPath, out ISubscribable result)
         {
             if (SubscribablePropertyCache.TryGetValue(propertyPath, out var weak))
@@ -108,7 +114,7 @@ namespace AnyBind
                     && cached != null
                     && ChangeHandlerDelegates.ContainsKey(path))
                 {
-                    cached.PropertyChanged -= ChangeHandlerDelegates[propertyPath];
+                    cached.PropertyChanged -= ChangeHandlerDelegates[path];
                 }
             }
         }

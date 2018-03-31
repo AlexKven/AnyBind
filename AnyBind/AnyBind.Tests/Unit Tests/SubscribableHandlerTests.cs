@@ -507,6 +507,49 @@ namespace AnyBind.Tests.UnitTests
         }
 
         [Fact]
+        public void WholeClassUnsubscribeTest()
+        {
+            // Arrange
+            SetupTestClasses();
+
+            TestClass2 testClass = new TestClass2();
+            TestClass1 testClass1 = new TestClass1();
+            SubscribableHandler handler = new SubscribableHandler(DependencyManager.Object, testClass);
+
+            Dictionary<string, int> callCounts = GetCallCountsDict();
+
+            int calculation = 0;
+
+            testClass.PropertyChanged += (s, e) =>
+            {
+                callCounts[e.PropertyName]++;
+                calculation = testClass.Calculation;
+            };
+
+            testClass1.PropertyChanged += (s, e) =>
+            {
+                callCounts[$"Class1.{e.PropertyName}"]++;
+            };
+
+            // Act
+            testClass.Num1 = 7;
+            testClass.Num2 = 14;
+            testClass.Class1 = testClass1;
+            testClass1.Num1 = 2;
+            testClass1.Num2 = 5;
+            handler.Unsubscribe();
+            testClass.Num1 = 7;
+            testClass.Num2 = 14;
+            testClass.Class1 = testClass1;
+            testClass1.Num1 = 2;
+            testClass1.Num2 = 5;
+
+            // Assert
+            Assert.Equal(expected: 5, actual: callCounts["Calculation"]);
+            Assert.Equal(expected: 31, actual: calculation);
+        }
+
+        [Fact]
         public void SubpropertyUnsubscribeTest()
         {
             // Arrange
