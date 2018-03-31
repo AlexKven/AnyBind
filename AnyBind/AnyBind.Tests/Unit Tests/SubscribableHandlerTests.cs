@@ -537,7 +537,7 @@ namespace AnyBind.Tests.UnitTests
             testClass.Class1 = testClass1;
             testClass1.Num1 = 2;
             testClass1.Num2 = 5;
-            handler.Unsubscribe();
+            handler.Dispose();
             testClass.Num1 = 7;
             testClass.Num2 = 14;
             testClass.Class1 = testClass1;

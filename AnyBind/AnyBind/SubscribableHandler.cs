@@ -8,7 +8,7 @@ using System.Text;
 
 namespace AnyBind
 {
-    internal class SubscribableHandler
+    internal class SubscribableHandler : IDisposable
     {
         private DependencyManager Manager;
         private WeakReference<ISubscribable> Instance;
@@ -21,6 +21,7 @@ namespace AnyBind
         public SubscribableHandler(DependencyManager manager, ISubscribable instance)
         {
             Manager = manager;
+            manager.StronglyReference(this);
             Instance = new WeakReference<ISubscribable>(instance);
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
@@ -40,10 +41,11 @@ namespace AnyBind
             CachePropertyPath("", instance);
         }
 
-        public void Unsubscribe()
+        public void Dispose()
         {
             UnCachePropertyPath("");
             ChangeHandlerDelegates.Clear();
+            Manager.ReleaseStrongReference(this);
         }
 
         bool TryGetSubscribablePropertyCache(string propertyPath, out ISubscribable result)

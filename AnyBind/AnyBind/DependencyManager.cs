@@ -22,6 +22,8 @@ namespace AnyBind
 
         private ConditionalWeakTable<object, SubscribableHandler> SetupInstances = new ConditionalWeakTable<object, SubscribableHandler>();
 
+        private List<SubscribableHandler> StrongSubscribableHandlerReferences = new List<SubscribableHandler>();
+
         public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
         {
             if (!Registrations.TryGetValue(type, out var result))
@@ -40,6 +42,25 @@ namespace AnyBind
                 SetupInstances.Remove(instance);
                 SetupInstances.Add(instance, handler);
             }
+        }
+
+        public virtual void DeactivateInstance(object instance)
+        {
+            if (SetupInstances.TryGetValue(instance, out var result))
+            {
+                SetupInstances.Remove(instance);
+                result.Dispose();
+            }
+        }
+
+        internal void StronglyReference(SubscribableHandler handler)
+        {
+            StrongSubscribableHandlerReferences.Add(handler);
+        }
+
+        internal void ReleaseStrongReference(SubscribableHandler handler)
+        {
+            StrongSubscribableHandlerReferences.Remove(handler);
         }
 
         public void RegisterClass(Type type)
