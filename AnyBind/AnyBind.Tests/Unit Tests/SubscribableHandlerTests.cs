@@ -401,6 +401,7 @@ namespace AnyBind.Tests.UnitTests
                 .Returns(class3Registration);
             DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass4)))
                 .Returns(class4Registration);
+            DependencyManager.Setup(dm => dm.InitializeInstance(It.IsAny<object>()));
         }
 
         private Dictionary<string, int> GetCallCountsDict()

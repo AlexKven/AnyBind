@@ -30,11 +30,16 @@ namespace AnyBind
             
         }
 
-        public void InitializeInstance(object instance)
+        public virtual void InitializeInstance(object instance)
         {
-            var subscribable = GeneralSubscribable.CreateSubscribable(instance);
-            var handler = new SubscribableHandler(this, subscribable);
-            SetupInstances.Add(instance, handler);
+            if (!SetupInstances.TryGetValue(instance, out _))
+            {
+                var subscribable = GeneralSubscribable.CreateSubscribable(instance);
+                SetupInstances.Add(instance, null);
+                var handler = new SubscribableHandler(this, subscribable);
+                SetupInstances.Remove(instance);
+                SetupInstances.Add(instance, handler);
+            }
         }
 
         public void RegisterClass(Type type)

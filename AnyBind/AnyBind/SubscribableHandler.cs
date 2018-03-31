@@ -10,6 +10,7 @@ namespace AnyBind
 {
     internal class SubscribableHandler
     {
+        private DependencyManager Manager;
         private WeakReference<ISubscribable> Instance;
         private Type InstanceType;
         private TypeInfo InstanceTypeInfo;
@@ -19,6 +20,7 @@ namespace AnyBind
 
         public SubscribableHandler(DependencyManager manager, ISubscribable instance)
         {
+            Manager = manager;
             Instance = new WeakReference<ISubscribable>(instance);
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
@@ -146,6 +148,8 @@ namespace AnyBind
                         if (TryAddToSubscribablePropertyCache(reassembled, typedPropertyValue))
                         {
                             typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, reassembled);
+                            if (reassembled != "")
+                                Manager.InitializeInstance(propertyValue);
                         }
                     }
                 }
