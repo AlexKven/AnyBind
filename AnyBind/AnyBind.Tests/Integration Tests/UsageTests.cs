@@ -19,7 +19,7 @@ namespace AnyBind.Tests.Integration_Tests
 
             int count = 0;
 
-            TestViewModel1 viewModel = new Test_Classes.TestViewModel1();
+            TestViewModel1 viewModel = new TestViewModel1();
             viewModel.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == "Multiplication")
@@ -33,6 +33,36 @@ namespace AnyBind.Tests.Integration_Tests
             viewModel.SecondInt = 6;
 
             Assert.Equal(expected: 2, actual: count);
+        }
+
+        [Fact]
+        public void TestViewModel2()
+        {
+            DependencyManager manager = new DependencyManager();
+            manager.RegisterClass(typeof(TestViewModel2));
+            manager.FinalizeRegistrations();
+
+            int count = 0;
+
+            TestViewModel2 viewModel = new TestViewModel2();
+            viewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == "Addition")
+                {
+                    count++;
+                }
+            };
+            manager.InitializeInstance(viewModel);
+
+            viewModel.Base.FirstInt = 5;
+            viewModel.Base.SecondInt = 2;
+            viewModel.ToAdd = 6;
+            viewModel.Base = new Test_Classes.TestViewModel1();
+            viewModel.Base.FirstInt = 3;
+            viewModel.Base.SecondInt = 4;
+            viewModel.ToAdd = 5;
+
+            Assert.Equal(expected: 7, actual: count);
         }
     }
 }
