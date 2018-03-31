@@ -40,6 +40,7 @@ namespace AnyBind.Tests.Integration_Tests
         {
             DependencyManager manager = new DependencyManager();
             manager.RegisterClass(typeof(TestViewModel2));
+            manager.RegisterClass(typeof(TestViewModel1));
             manager.FinalizeRegistrations();
 
             int count = 0;

@@ -20,22 +20,47 @@ namespace AnyBind
         protected Dictionary<Type, Dictionary<DependencyBase, Dictionary<string, Type>>> PreRegistrations
             = new Dictionary<Type, Dictionary<DependencyBase, Dictionary<string, Type>>>();
 
-        private List<SubscribableHandler> SetupInstances = new List<SubscribableHandler>();
+        private ConditionalWeakTable<object, SubscribableHandler> SetupInstances = new ConditionalWeakTable<object, SubscribableHandler>();
+
+        private List<SubscribableHandler> StrongSubscribableHandlerReferences = new List<SubscribableHandler>();
 
         public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
         {
             if (!Registrations.TryGetValue(type, out var result))
                 throw new KeyNotFoundException($"No such class as {type} was registered.");
             return result;
+            
         }
 
-        public void InitializeInstance(object instance)
+        public virtual void InitializeInstance(object instance)
         {
-            if (AutoCleanup)
-                CleanupInstances();
-            var subscribable = GeneralSubscribable.CreateSubscribable(instance);
-            var handler = new SubscribableHandler(this, subscribable);
-            SetupInstances.Add(handler);
+            if (!SetupInstances.TryGetValue(instance, out _))
+            {
+                var subscribable = GeneralSubscribable.CreateSubscribable(instance);
+                SetupInstances.Add(instance, null);
+                var handler = new SubscribableHandler(this, subscribable);
+                SetupInstances.Remove(instance);
+                SetupInstances.Add(instance, handler);
+            }
+        }
+
+        public virtual void DeactivateInstance(object instance)
+        {
+            if (SetupInstances.TryGetValue(instance, out var result))
+            {
+                SetupInstances.Remove(instance);
+                result.Dispose();
+            }
+        }
+
+        internal void StronglyReference(SubscribableHandler handler)
+        {
+            StrongSubscribableHandlerReferences.Add(handler);
+        }
+
+        internal void ReleaseStrongReference(SubscribableHandler handler)
+        {
+            StrongSubscribableHandlerReferences.Remove(handler);
         }
 
         public void RegisterClass(Type type)
@@ -112,13 +137,6 @@ namespace AnyBind
 
                 Registrations.TryAdd(typeRegistration.Key, registration);
             }
-        }
-
-        public bool AutoCleanup { get; set; } = true;
-
-        public void CleanupInstances()
-        {
-            SetupInstances.RemoveAll(sh => !sh.IsAlive);
         }
     }
 }

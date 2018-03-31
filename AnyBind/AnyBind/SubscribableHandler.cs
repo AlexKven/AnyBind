@@ -8,8 +8,9 @@ using System.Text;
 
 namespace AnyBind
 {
-    internal class SubscribableHandler
+    internal class SubscribableHandler : IDisposable
     {
+        private DependencyManager Manager;
         private WeakReference<ISubscribable> Instance;
         private Type InstanceType;
         private TypeInfo InstanceTypeInfo;
@@ -19,6 +20,8 @@ namespace AnyBind
 
         public SubscribableHandler(DependencyManager manager, ISubscribable instance)
         {
+            Manager = manager;
+            manager.StronglyReference(this);
             Instance = new WeakReference<ISubscribable>(instance);
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
@@ -36,6 +39,13 @@ namespace AnyBind
             }
 
             CachePropertyPath("", instance);
+        }
+
+        public void Dispose()
+        {
+            UnCachePropertyPath("");
+            ChangeHandlerDelegates.Clear();
+            Manager.ReleaseStrongReference(this);
         }
 
         bool TryGetSubscribablePropertyCache(string propertyPath, out ISubscribable result)
@@ -106,7 +116,7 @@ namespace AnyBind
                     && cached != null
                     && ChangeHandlerDelegates.ContainsKey(path))
                 {
-                    cached.PropertyChanged -= ChangeHandlerDelegates[propertyPath];
+                    cached.PropertyChanged -= ChangeHandlerDelegates[path];
                 }
             }
         }
@@ -146,6 +156,8 @@ namespace AnyBind
                         if (TryAddToSubscribablePropertyCache(reassembled, typedPropertyValue))
                         {
                             typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, reassembled);
+                            if (reassembled != "")
+                                Manager.InitializeInstance(propertyValue);
                         }
                     }
                 }
