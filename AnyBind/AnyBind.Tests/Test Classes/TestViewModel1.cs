@@ -74,5 +74,8 @@ namespace AnyBind.Tests.Test_Classes
 
         [DependsOn("ToAdd", "Base.Multiplication")]
         public int Addition => ToAdd + Base.Multiplication;
+
+        [DependsOn("ToAdd", "Base.FirstInt", "Base.SecondInt")]
+        public int SumAll => ToAdd + Base.FirstInt + Base.SecondInt;
     }
 }
