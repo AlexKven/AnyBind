@@ -43,14 +43,19 @@ namespace AnyBind.Tests.Integration_Tests
             manager.RegisterClass(typeof(TestViewModel1));
             manager.FinalizeRegistrations();
 
-            int count = 0;
+            int count1 = 0;
+            int count2 = 0;
 
             TestViewModel2 viewModel = new TestViewModel2();
             viewModel.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == "Addition")
                 {
-                    count++;
+                    count1++;
+                }
+                if (e.PropertyName == "SumAll")
+                {
+                    count2++;
                 }
             };
             manager.InitializeInstance(viewModel);
@@ -63,7 +68,8 @@ namespace AnyBind.Tests.Integration_Tests
             viewModel.Base.SecondInt = 4;
             viewModel.ToAdd = 5;
 
-            Assert.Equal(expected: 7, actual: count);
+            Assert.Equal(expected: 7, actual: count1);
+            Assert.Equal(expected: 7, actual: count2);
         }
     }
 }
