@@ -36,7 +36,7 @@ namespace AnyBind
         {
             if (!SetupInstances.TryGetValue(instance, out _))
             {
-                var subscribable = GeneralSubscribable.CreateSubscribable(instance);
+                var subscribable = GeneralSubscribable.CreateSubscribable(instance, this);
                 SetupInstances.Add(instance, null);
                 var handler = new SubscribableHandler(this, subscribable);
                 SetupInstances.Remove(instance);

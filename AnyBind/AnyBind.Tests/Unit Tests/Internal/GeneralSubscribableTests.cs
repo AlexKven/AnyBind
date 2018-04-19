@@ -1,4 +1,5 @@
 ﻿using AnyBind.Internal;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -86,7 +87,7 @@ namespace AnyBind.Tests.UnitTests.Internal
         [InlineData("T1[<T1.Int2>]", typeof(int), "5")]
         public void GetPropertyValue(string propertyPath, Type valueType, string value)
         {
-            var gs = new GeneralSubscribable(new Test2());
+            var gs = new GeneralSubscribable(new Test2(), Mock.Of<DependencyManager>());
 
             var result = gs.GetPropertyValue(propertyPath);
 
@@ -102,7 +103,7 @@ namespace AnyBind.Tests.UnitTests.Internal
         public void PropertyChanged(string propertyName, object value)
         {
             var t2 = new Test2();
-            var gs = new GeneralSubscribable(t2);
+            var gs = new GeneralSubscribable(t2, Mock.Of<DependencyManager>());
             bool raised = false;
 
             gs.PropertyChanged += (s, e) =>

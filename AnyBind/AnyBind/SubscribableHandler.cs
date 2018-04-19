@@ -152,7 +152,7 @@ namespace AnyBind
                         pathsToSubscribe.Push(path.Concat(new string[] { prop }));
                     if (GeneralSubscribable.CanSubscribe(typeInfo))
                     {
-                        var typedPropertyValue = GeneralSubscribable.CreateSubscribable(propertyValue);
+                        var typedPropertyValue = GeneralSubscribable.CreateSubscribable(propertyValue, Manager);
                         if (TryAddToSubscribablePropertyCache(reassembled, typedPropertyValue))
                         {
                             typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, reassembled);

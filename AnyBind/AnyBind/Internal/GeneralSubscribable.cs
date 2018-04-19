@@ -15,7 +15,7 @@ namespace AnyBind.Internal
 
         private INotifyPropertyChanged NotifyPropertyChanged;
 
-        public GeneralSubscribable(object instance)
+        internal GeneralSubscribable(object instance, DependencyManager dependencyManager)
         {
             Instance = instance;
             InstanceType = instance.GetType();
@@ -66,11 +66,11 @@ namespace AnyBind.Internal
             }
         }
 
-        public static ISubscribable CreateSubscribable(object obj)
+        public static ISubscribable CreateSubscribable(object obj, DependencyManager dependencyManager)
         {
             if (obj is ISubscribable subscribable)
                 return subscribable;
-            return new GeneralSubscribable(obj);
+            return new GeneralSubscribable(obj, dependencyManager);
         }
 
         public Type GetSubscribableType() => InstanceType;
