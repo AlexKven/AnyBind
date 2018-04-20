@@ -121,7 +121,8 @@ namespace AnyBind.Tests.UnitTests.Internal
         [InlineData(typeof(Test1), false)]
         public void CanSubscribe(Type type, bool result)
         {
-            Assert.Equal(expected: result, actual: GeneralSubscribable.CanSubscribe(type?.GetTypeInfo()));
+            DependencyManager dm = new DependencyManager();
+            Assert.Equal(expected: result, actual: dm.CanSubscribe(type?.GetTypeInfo()));
         }
         
         /// <param name="type"></param>
@@ -137,9 +138,10 @@ namespace AnyBind.Tests.UnitTests.Internal
             // Arrange
             var input = properties.Select(prop => prop.EndsWith("+") ? prop.Substring(0, prop.Length - 1) : prop);
             var expectedOutput = properties.Where(prop => prop.EndsWith("+")).Select(prop => prop.Substring(0, prop.Length - 1));
+            var dm = new DependencyManager();
 
             // Act
-            var output = GeneralSubscribable.FilterSubscribableProperties(type?.GetTypeInfo(), input);
+            var output = dm.FilterSubscribableProperties(type?.GetTypeInfo(), input);
 
             // Assert
             Assert.True(expectedOutput.SequenceEqual(output));

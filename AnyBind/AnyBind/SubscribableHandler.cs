@@ -146,11 +146,11 @@ namespace AnyBind
                         propertyValue = instance.GetPropertyValue(reassembled);
                     var typeInfo = propertyValue?.GetType()?.GetTypeInfo();
 
-                    var subscribableProperties = GeneralSubscribable.FilterSubscribableProperties(typeInfo, nextProperties);
+                    var subscribableProperties = Manager.FilterSubscribableProperties(typeInfo, nextProperties);
                     
                     foreach (var prop in subscribableProperties)
                         pathsToSubscribe.Push(path.Concat(new string[] { prop }));
-                    if (GeneralSubscribable.CanSubscribe(typeInfo))
+                    if (Manager.CanSubscribe(typeInfo))
                     {
                         var typedPropertyValue = GeneralSubscribable.CreateSubscribable(propertyValue, Manager);
                         if (TryAddToSubscribablePropertyCache(reassembled, typedPropertyValue))

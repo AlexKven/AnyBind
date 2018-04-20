@@ -1,4 +1,5 @@
-﻿using AnyBind.Attributes;
+﻿using AnyBind.Adapters;
+using AnyBind.Attributes;
 using AnyBind.Internal;
 using System;
 using System.Collections.Concurrent;
@@ -23,6 +24,18 @@ namespace AnyBind
         private ConditionalWeakTable<object, SubscribableHandler> SetupInstances = new ConditionalWeakTable<object, SubscribableHandler>();
 
         private List<SubscribableHandler> StrongSubscribableHandlerReferences = new List<SubscribableHandler>();
+
+        private Dictionary<IClassAdapter, int> PreRegisteredClassAdapters = new Dictionary<IClassAdapter, int>();
+
+        private List<IClassAdapter> RegisteredClassAdapters = new List<IClassAdapter>();
+
+        public IReadOnlyCollection<IClassAdapter> GetClassAdapters() =>
+            new System.Collections.ObjectModel.ReadOnlyCollection<IClassAdapter>(RegisteredClassAdapters);
+
+        public DependencyManager()
+        {
+            PreRegisteredClassAdapters.Add(new Adapters.NotifyPropertyChangedClassAdapter(), 0);
+        }
 
         public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
         {
@@ -61,6 +74,17 @@ namespace AnyBind
         internal void ReleaseStrongReference(SubscribableHandler handler)
         {
             StrongSubscribableHandlerReferences.Remove(handler);
+        }
+
+        /// <summary>
+        /// Registers an IClassAdapter which allows you to subscribe to property changes on
+        /// any class that has any sort of mechanism for listening to property changes.
+        /// </summary>
+        /// <param name="adapter"></param>
+        /// <param name="priority"></param>
+        public void RegisterClassAdapter(IClassAdapter adapter, int priority)
+        {
+            PreRegisteredClassAdapters.Add(adapter, priority);
         }
 
         public void RegisterClass(Type type)
@@ -136,7 +160,24 @@ namespace AnyBind
                 }
 
                 Registrations.TryAdd(typeRegistration.Key, registration);
+
+                RegisteredClassAdapters.AddRange(PreRegisteredClassAdapters.OrderBy(kvp => kvp.Value).Select(kvp => kvp.Key));
             }
+        }
+
+        internal bool CanSubscribe(TypeInfo typeInfo)
+        {
+            return RegisteredClassAdapters.Any(a => a.CanSubscribe(typeInfo));
+        }
+
+        internal IEnumerable<string> FilterSubscribableProperties(TypeInfo typeInfo, IEnumerable<string> properties)
+        {
+            IEnumerable<string> result = new string[0];
+            foreach (var adapter in RegisteredClassAdapters)
+            {
+                result = result.Union(adapter.FilterSubscribableProperties(typeInfo, properties));
+            }
+            return result;
         }
     }
 }

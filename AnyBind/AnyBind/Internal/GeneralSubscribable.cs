@@ -21,15 +21,15 @@ namespace AnyBind.Internal
             Instance = instance;
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
-            HookIntoChangeHandlers();
+            HookIntoChangeHandlers(dependencyManager);
         }
 
-        private void HookIntoChangeHandlers()
+        private void HookIntoChangeHandlers(DependencyManager dependencyManager)
         {
             bool subscribed = false;
-            for (int i = 0; i < ClassAdapters.Count && !subscribed; i++)
+            for (int i = 0; i < dependencyManager.GetClassAdapters().Count && !subscribed; i++)
             {
-                var adapter = ClassAdapters[i];
+                var adapter = dependencyManager.GetClassAdapters().ElementAt(i);
                 if (adapter.CanSubscribe(InstanceTypeInfo))
                 {
                     var instanceAdapter = adapter.CreateInstanceAdapter(Instance);
@@ -57,23 +57,6 @@ namespace AnyBind.Internal
         public void RaisePropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.RaiseEvent("PropertyChanged", e);
-        }
-
-        public static List<IClassAdapter> ClassAdapters = new List<IClassAdapter>() { new NotifyPropertyChangedClassAdapter() };
-
-        public static bool CanSubscribe(TypeInfo typeInfo)
-        {
-            return ClassAdapters.Any(a => a.CanSubscribe(typeInfo));
-        }
-
-        public static IEnumerable<string> FilterSubscribableProperties(TypeInfo typeInfo, IEnumerable<string> properties)
-        {
-            IEnumerable<string> result = new string[0];
-            foreach (var adapter in ClassAdapters)
-            {
-                result = result.Union(adapter.FilterSubscribableProperties(typeInfo, properties));
-            }
-            return result;
         }
 
         public static ISubscribable CreateSubscribable(object obj, DependencyManager dependencyManager)
