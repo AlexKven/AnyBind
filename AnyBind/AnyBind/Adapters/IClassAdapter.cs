@@ -9,5 +9,7 @@ namespace AnyBind.Adapters
     {
         bool CanSubscribe(TypeInfo typeInfo);
         IEnumerable<string> FilterSubscribableProperties(TypeInfo typeInfo, IEnumerable<string> properties);
+
+        IInstanceAdapter CreateInstanceAdapter(object instance);
     }
 }

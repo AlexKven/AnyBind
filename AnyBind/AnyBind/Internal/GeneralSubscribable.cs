@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AnyBind.Adapters;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,22 +14,29 @@ namespace AnyBind.Internal
         public Type InstanceType { get; }
         public TypeInfo InstanceTypeInfo { get; }
 
-        private INotifyPropertyChanged NotifyPropertyChanged;
+        public List<IInstanceAdapter> Adapters { get; } = new List<IInstanceAdapter>();
 
         internal GeneralSubscribable(object instance, DependencyManager dependencyManager)
         {
             Instance = instance;
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
-
-            NotifyPropertyChanged = instance as INotifyPropertyChanged;
             HookIntoChangeHandlers();
         }
 
         private void HookIntoChangeHandlers()
         {
-            if (NotifyPropertyChanged != null)
-                NotifyPropertyChanged.PropertyChanged += (s, e) => OnPropertyChanged(s, e);
+            bool subscribed = false;
+            for (int i = 0; i < ClassAdapters.Count && !subscribed; i++)
+            {
+                var adapter = ClassAdapters[i];
+                if (adapter.CanSubscribe(InstanceTypeInfo))
+                {
+                    var instanceAdapter = adapter.CreateInstanceAdapter(Instance);
+                    instanceAdapter.SubscribeToProperties(InstanceTypeInfo.DeclaredProperties.Select(pi => pi.Name).ToArray());
+                    subscribed = true;
+                }
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -47,23 +55,24 @@ namespace AnyBind.Internal
 
         public void RaisePropertyChanged(PropertyChangedEventArgs e)
         {
-            NotifyPropertyChanged?.RaiseEvent("PropertyChanged", e);
+            PropertyChanged?.RaiseEvent("PropertyChanged", e);
         }
+
+        public static List<IClassAdapter> ClassAdapters = new List<IClassAdapter>() { new NotifyPropertyChangedClassAdapter() };
 
         public static bool CanSubscribe(TypeInfo typeInfo)
         {
-            if (typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(typeInfo))
-                return true;
-            return false;
+            return ClassAdapters.Any(a => a.CanSubscribe(typeInfo));
         }
 
         public static IEnumerable<string> FilterSubscribableProperties(TypeInfo typeInfo, IEnumerable<string> properties)
         {
-            if (typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(typeInfo))
+            IEnumerable<string> result = new string[0];
+            foreach (var adapter in ClassAdapters)
             {
-                foreach (var prop in properties)
-                    yield return prop;
+                result = result.Union(adapter.FilterSubscribableProperties(typeInfo, properties));
             }
+            return result;
         }
 
         public static ISubscribable CreateSubscribable(object obj, DependencyManager dependencyManager)
