@@ -33,6 +33,7 @@ namespace AnyBind.Internal
                 if (adapter.CanSubscribe(InstanceTypeInfo))
                 {
                     var instanceAdapter = adapter.CreateInstanceAdapter(Instance);
+                    instanceAdapter.PropertyChanged += (s, e) => OnPropertyChanged(s, e);
                     instanceAdapter.SubscribeToProperties(InstanceTypeInfo.DeclaredProperties.Select(pi => pi.Name).ToArray());
                     subscribed = true;
                 }
