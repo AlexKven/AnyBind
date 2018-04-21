@@ -1,4 +1,5 @@
-﻿using AnyBind.Attributes;
+﻿using AnyBind.Adapters;
+using AnyBind.Attributes;
 using AnyBind.Internal;
 using Moq;
 using System;
@@ -402,6 +403,7 @@ namespace AnyBind.Tests.UnitTests
             DependencyManager.Setup(dm => dm.GetRegistrations(typeof(TestClass4)))
                 .Returns(class4Registration);
             DependencyManager.Setup(dm => dm.InitializeInstance(It.IsAny<object>()));
+            DependencyManager.Setup(dm => dm.GetClassAdapters()).Returns(new List<IClassAdapter>() { new NotifyPropertyChangedClassAdapter() });
         }
 
         private Dictionary<string, int> GetCallCountsDict()

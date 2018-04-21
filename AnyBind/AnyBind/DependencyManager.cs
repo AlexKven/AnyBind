@@ -29,7 +29,7 @@ namespace AnyBind
 
         private List<IClassAdapter> RegisteredClassAdapters = new List<IClassAdapter>();
 
-        public IReadOnlyCollection<IClassAdapter> GetClassAdapters() =>
+        public virtual IReadOnlyCollection<IClassAdapter> GetClassAdapters() =>
             new System.Collections.ObjectModel.ReadOnlyCollection<IClassAdapter>(RegisteredClassAdapters);
 
         public DependencyManager()
@@ -167,13 +167,13 @@ namespace AnyBind
 
         internal bool CanSubscribe(TypeInfo typeInfo)
         {
-            return RegisteredClassAdapters.Any(a => a.CanSubscribe(typeInfo));
+            return GetClassAdapters().Any(a => a.CanSubscribe(typeInfo));
         }
 
         internal IEnumerable<string> FilterSubscribableProperties(TypeInfo typeInfo, IEnumerable<string> properties)
         {
             IEnumerable<string> result = new string[0];
-            foreach (var adapter in RegisteredClassAdapters)
+            foreach (var adapter in GetClassAdapters())
             {
                 result = result.Union(adapter.FilterSubscribableProperties(typeInfo, properties));
             }
