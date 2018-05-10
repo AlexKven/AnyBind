@@ -75,6 +75,20 @@ namespace AnyBind.Tests.UnitTests.Internal
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
+        protected Mock<DependencyManager> DependencyManager;
+
+        public GeneralSubscribableTests()
+        {
+            DependencyManager = new Mock<AnyBind.DependencyManager>()
+            {
+                CallBase = true
+            };
+
+            DependencyManager.Object.RegisterClass(typeof(Test1));
+            DependencyManager.Object.RegisterClass(typeof(Test2));
+            DependencyManager.Object.FinalizeRegistrations();
+        }
+
         [Theory]
         [InlineData("Str1", typeof(string), "One")]
         [InlineData("Str2", typeof(string), "Two")]
@@ -87,7 +101,7 @@ namespace AnyBind.Tests.UnitTests.Internal
         [InlineData("T1[<T1.Int2>]", typeof(int), "5")]
         public void GetPropertyValue(string propertyPath, Type valueType, string value)
         {
-            var gs = new GeneralSubscribable(new Test2(), Mock.Of<DependencyManager>());
+            var gs = new GeneralSubscribable(new Test2(), DependencyManager.Object);
 
             var result = gs.GetPropertyValue(propertyPath);
 
@@ -103,7 +117,7 @@ namespace AnyBind.Tests.UnitTests.Internal
         public void PropertyChanged(string propertyName, object value)
         {
             var t2 = new Test2();
-            var gs = new GeneralSubscribable(t2, Mock.Of<DependencyManager>());
+            var gs = new GeneralSubscribable(t2, DependencyManager.Object);
             bool raised = false;
 
             gs.PropertyChanged += (s, e) =>
@@ -121,8 +135,7 @@ namespace AnyBind.Tests.UnitTests.Internal
         [InlineData(typeof(Test1), false)]
         public void CanSubscribe(Type type, bool result)
         {
-            DependencyManager dm = new DependencyManager();
-            Assert.Equal(expected: result, actual: dm.CanSubscribe(type?.GetTypeInfo()));
+            Assert.Equal(expected: result, actual: DependencyManager.Object.CanSubscribe(type?.GetTypeInfo()));
         }
         
         /// <param name="type"></param>
@@ -138,10 +151,9 @@ namespace AnyBind.Tests.UnitTests.Internal
             // Arrange
             var input = properties.Select(prop => prop.EndsWith("+") ? prop.Substring(0, prop.Length - 1) : prop);
             var expectedOutput = properties.Where(prop => prop.EndsWith("+")).Select(prop => prop.Substring(0, prop.Length - 1));
-            var dm = new DependencyManager();
 
             // Act
-            var output = dm.FilterSubscribableProperties(type?.GetTypeInfo(), input);
+            var output = DependencyManager.Object.FilterSubscribableProperties(type?.GetTypeInfo(), input);
 
             // Assert
             Assert.True(expectedOutput.SequenceEqual(output));
