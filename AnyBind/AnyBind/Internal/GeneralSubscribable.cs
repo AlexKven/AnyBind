@@ -56,7 +56,7 @@ namespace AnyBind.Internal
 
         public void RaisePropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChanged?.RaiseEvent("PropertyChanged", e);
+            Instance?.RaiseEvent("PropertyChanged", e);
         }
 
         public static ISubscribable CreateSubscribable(object obj, DependencyManager dependencyManager)
