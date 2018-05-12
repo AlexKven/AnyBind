@@ -58,14 +58,10 @@ namespace AnyBind.Adapters
             List<string> exclude = new List<string>();
             if (Instance == null)
                 return new string[0];
-            if (!IsSubscribed)
-            {
-                Instance.CollectionChanged += Instance_CollectionChanged;
-            }
             foreach (var property in propertyNames)
             {
                 int index = -1;
-                if (property.StartsWith("[") && property.EndsWith("]")
+                if (property != "[]" && property.StartsWith("[") && property.EndsWith("]")
                     && int.TryParse(property.Substring(1, property.Length - 2), out index))
                 {
                     SubscribedIndices.Add(index);
@@ -79,6 +75,11 @@ namespace AnyBind.Adapters
                     }
                 }
                 SubscribedProperties.Add(property, index);
+            }
+            if (!IsSubscribed && SubscribedProperties.Count > 0)
+            {
+                Instance.CollectionChanged += Instance_CollectionChanged;
+                IsSubscribed = true;
             }
             if (exclude.Count == 0)
                 return propertyNames;
@@ -106,7 +107,7 @@ namespace AnyBind.Adapters
         {
             foreach (var property in propertyNames)
             {
-                if (property.StartsWith("[") && property.EndsWith("]")
+                if (property != "[]" && property.StartsWith("[") && property.EndsWith("]")
                     && int.TryParse(property.Substring(1, property.Length - 2), out int index))
                 {
                     SubscribedIndices.Remove(index);
