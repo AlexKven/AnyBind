@@ -7,7 +7,7 @@ namespace AnyBind.Adapters
 {
     public interface IInstanceAdapter : IDisposable, INotifyPropertyChanged
     {
-        bool SubscribeToProperties(params string[] propertyName);
-        void UnsubscribeFromProperties(params string[] propertyName);
+        string[] SubscribeToProperties(params string[] propertyNames);
+        void UnsubscribeFromProperties(params string[] propertyNames);
     }
 }

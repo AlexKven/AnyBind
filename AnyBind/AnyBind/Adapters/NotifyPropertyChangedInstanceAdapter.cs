@@ -37,25 +37,25 @@ namespace AnyBind.Adapters
                 OnPropertyChanged(e.PropertyName);
         }
 
-        public bool SubscribeToProperties(params string[] propertyName)
+        public string[] SubscribeToProperties(params string[] propertyNames)
         {
             if (Instance == null)
-                return false;
+                return new string[0];
             if (!IsSubscribed)
             {
                 Instance.PropertyChanged += Instance_PropertyChanged;
                 IsSubscribed = true;
             }
-            foreach (var property in propertyName)
+            foreach (var property in propertyNames)
             {
                 SubscribedProperties.Add(property);
             }
-            return true;
+            return propertyNames;
         }
 
-        public void UnsubscribeFromProperties(params string[] propertyName)
+        public void UnsubscribeFromProperties(params string[] propertyNames)
         {
-            foreach (var property in propertyName)
+            foreach (var property in propertyNames)
             {
                 SubscribedProperties.Remove(property);
             }
