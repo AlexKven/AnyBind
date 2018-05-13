@@ -44,6 +44,20 @@ namespace AnyBind.Adapters
             }
         }
 
+        private void RaiseIndexRange(int start, int length)
+        {
+            var searchMin = SubscribedIndices.Min;
+            var searchMax = SubscribedIndices.Max;
+            if (searchMin < start)
+                searchMin = start;
+            if (searchMax >= start + length)
+                searchMax = start + length - 1;
+            if (searchMax < searchMin)
+                return;
+            foreach (var index in SubscribedIndices.GetViewBetween(searchMin, searchMax))
+                RaiseIfSubscribed(index);
+        }
+
         public void Dispose()
         {
             if (IsSubscribed)
@@ -94,11 +108,23 @@ namespace AnyBind.Adapters
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                     RaiseIfSubscribed("Count");
-                    for (int i = 0; i < e.NewItems.Count; i++)
-                    {
-                        var index = e.NewStartingIndex + i;
-                        RaiseIfSubscribed(index);
-                    }
+                    RaiseIndexRange(e.NewStartingIndex, e.NewItems.Count);
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                    // Can work with removing a range of items if ranges are properly provided by the class
+                    RaiseIfSubscribed("Count");
+                    RaiseIndexRange(e.OldStartingIndex, Instance.Count - e.OldStartingIndex + e.OldItems.Count);
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                    
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                    // Only works with single item replace (Collection[index] = value)
+                    RaiseIfSubscribed(e.NewStartingIndex);
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                    RaiseIfSubscribed("Count");
+                    RaiseIndexRange(0, SubscribedIndices.Max + 1);
                     break;
             }
         }
