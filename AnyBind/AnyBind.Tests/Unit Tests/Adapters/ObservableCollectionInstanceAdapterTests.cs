@@ -288,5 +288,43 @@ namespace AnyBind.Tests.Unit_Tests.Adapters
             Assert.Equal(expected: 1, actual: raiseCounts["[6]"]);
             Assert.Equal(expected: 0, actual: raiseCounts["[7]"]);
         }
+
+        [Fact]
+        public void NotifyPropertyChangedInstanceAdapter_EventsRaisedUnsubscribe_AddMany()
+        {
+            // Arrange
+            Dictionary<string, int> raiseCounts = new Dictionary<string, int>()
+            {
+                ["Count"] = 0,
+                ["[]"] = 0,
+                ["[0]"] = 0,
+                ["[1]"] = 0,
+                ["[2]"] = 0,
+                ["[3]"] = 0,
+            };
+            Adapter.PropertyChanged += (s, e) =>
+            {
+                if (raiseCounts.ContainsKey(e.PropertyName))
+                    raiseCounts[e.PropertyName]++;
+            };
+
+            foreach (var prop in raiseCounts.Keys)
+            {
+                Adapter.SubscribeToProperties(prop);
+            }
+
+            Adapter.UnsubscribeFromProperties("[1]", "Count", "[]");
+
+            // Act
+            Object.AddRange(new string[] { "Test1", "Test2", "Test3" });
+
+            // Assert
+            Assert.Equal(expected: 0, actual: raiseCounts["Count"]);
+            Assert.Equal(expected: 0, actual: raiseCounts["[]"]);
+            Assert.Equal(expected: 1, actual: raiseCounts["[0]"]);
+            Assert.Equal(expected: 0, actual: raiseCounts["[1]"]);
+            Assert.Equal(expected: 1, actual: raiseCounts["[2]"]);
+            Assert.Equal(expected: 0, actual: raiseCounts["[3]"]);
+        }
     }
 }

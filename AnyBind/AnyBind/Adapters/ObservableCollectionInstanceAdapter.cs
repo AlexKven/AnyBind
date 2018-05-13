@@ -13,6 +13,7 @@ namespace AnyBind.Adapters
         private bool IsSubscribed { get; set; }
         private Dictionary<string, int> SubscribedProperties { get; } = new Dictionary<string, int>();
         private SortedSet<int> SubscribedIndices { get; } = new SortedSet<int>();
+        private Dictionary<int, List<string>> SubscribedPropertiesByIndex = new Dictionary<int, List<string>>();
 
         public ObservableCollectionInstanceAdapter(ObservableCollection<T> instance)
         {
@@ -33,11 +34,9 @@ namespace AnyBind.Adapters
 
         private void RaiseIfSubscribed(int index)
         {
-            if (SubscribedIndices.Contains(index))
+            if (SubscribedPropertiesByIndex.TryGetValue(index, out var indexProperties))
             {
-                foreach (var prop in SubscribedProperties
-                    .Where(kvp => kvp.Value == index)
-                    .Select(kvp => kvp.Key))
+                foreach (var prop in indexProperties)
                 {
                     OnPropertyChanged(prop);
                 }
@@ -78,7 +77,13 @@ namespace AnyBind.Adapters
                 if (property != "[]" && property.StartsWith("[") && property.EndsWith("]")
                     && int.TryParse(property.Substring(1, property.Length - 2), out index))
                 {
-                    SubscribedIndices.Add(index);
+                    if (SubscribedPropertiesByIndex.TryGetValue(index, out var indexProperties))
+                        indexProperties.Add(property);
+                    else
+                    {
+                        SubscribedIndices.Add(index);
+                        SubscribedPropertiesByIndex.Add(index, new List<string>() { property });
+                    }
                 }
                 else
                 {
@@ -103,7 +108,7 @@ namespace AnyBind.Adapters
 
         private void Instance_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            OnPropertyChanged("[]");
+            RaiseIfSubscribed("[]");
             switch (e.Action)
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
@@ -116,7 +121,7 @@ namespace AnyBind.Adapters
                     RaiseIndexRange(e.OldStartingIndex, Instance.Count - e.OldStartingIndex + e.OldItems.Count);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                    
+                    RaiseIndexRange(e.OldStartingIndex, e.NewStartingIndex - e.OldStartingIndex + 1);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
                     // Only works with single item replace (Collection[index] = value)
@@ -133,14 +138,19 @@ namespace AnyBind.Adapters
         {
             foreach (var property in propertyNames)
             {
+                SubscribedProperties.Remove(property);
                 if (property != "[]" && property.StartsWith("[") && property.EndsWith("]")
                     && int.TryParse(property.Substring(1, property.Length - 2), out int index))
                 {
-                    SubscribedIndices.Remove(index);
-                }
-                else
-                {
-                    SubscribedProperties.Remove(property);
+                    if (SubscribedPropertiesByIndex.TryGetValue(index, out var indexProperties))
+                    {
+                        indexProperties.Remove(property);
+                        if (indexProperties.Count == 0)
+                        {
+                            SubscribedPropertiesByIndex.Remove(index);
+                            SubscribedIndices.Remove(index);
+                        }
+                    }
                 }
             }
             if (SubscribedProperties.Count == 0)
