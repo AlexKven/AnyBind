@@ -1,7 +1,9 @@
-﻿using AnyBind.Internal;
+﻿using AnyBind.Adapters;
+using AnyBind.Internal;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -75,6 +77,11 @@ namespace AnyBind.Tests.UnitTests.Internal
             public event PropertyChangedEventHandler PropertyChanged;
         }
 
+        public class Test3 : ObservableCollection<int>
+        {
+
+        }
+
         protected Mock<DependencyManager> DependencyManager;
 
         public GeneralSubscribableTests()
@@ -86,6 +93,7 @@ namespace AnyBind.Tests.UnitTests.Internal
 
             DependencyManager.Object.RegisterClass(typeof(Test1));
             DependencyManager.Object.RegisterClass(typeof(Test2));
+            DependencyManager.Object.RegisterClass(typeof(Test3));
             DependencyManager.Object.FinalizeRegistrations();
         }
 
@@ -114,7 +122,7 @@ namespace AnyBind.Tests.UnitTests.Internal
         [InlineData("Str2", "S1")]
         [InlineData("Str3", "S1")]
         [InlineData("T1", null)]
-        public void PropertyChanged(string propertyName, object value)
+        public void PropertyChanged_INotifyPropertyChanged(string propertyName, object value)
         {
             var t2 = new Test2();
             var gs = new GeneralSubscribable(t2, DependencyManager.Object);
@@ -131,7 +139,31 @@ namespace AnyBind.Tests.UnitTests.Internal
         }
 
         [Theory]
+        [InlineData("Count", true)]
+        [InlineData("Length", false)]
+        [InlineData("[]", true)]
+        [InlineData("[0]", true)]
+        [InlineData("[1]", false)]
+        public void PropertyChanged_ObservableCollection_Add(string propertyName, bool expectedRaised)
+        {
+            var collection = new ObservableCollection<int>();
+            var gs = new GeneralSubscribable(collection, DependencyManager.Object);
+            bool raised = false;
+
+            gs.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == propertyName)
+                    raised = true;
+            };
+
+            collection.Add(703);
+
+            Assert.Equal(expected: expectedRaised, actual: raised);
+        }
+
+        [Theory]
         [InlineData(typeof(Test2), true)]
+        [InlineData(typeof(Test3), true)]
         [InlineData(typeof(Test1), false)]
         public void CanSubscribe(Type type, bool result)
         {
@@ -144,11 +176,18 @@ namespace AnyBind.Tests.UnitTests.Internal
         /// e.g. "PropertyName+"
         /// </param>
         [Theory]
-        [InlineData(typeof(Test2), "Prop1+", "Prop2+")]
-        [InlineData(typeof(Test1), "Prop1", "Prop1")]
-        public void FilterSubscribableProperties(Type type, params string[] properties)
+        [InlineData(typeof(Test2), true, "Prop1+", "Prop2+")]
+        [InlineData(typeof(Test3), true, "Count+", "Length+")]
+        [InlineData(typeof(Test3), false, "Count+", "Length")]
+        [InlineData(typeof(Test1), true, "Prop1", "Prop2")]
+        public void FilterSubscribableProperties(Type type, bool includeNotifyPropertyClassAdapter, params string[] properties)
         {
             // Arrange
+            if (!includeNotifyPropertyClassAdapter)
+            {
+                DependencyManager.Setup(dm => dm.GetClassAdapters())
+                    .Returns(new List<IClassAdapter>() { new ObservableCollectionClassAdapter() });
+            }
             var input = properties.Select(prop => prop.EndsWith("+") ? prop.Substring(0, prop.Length - 1) : prop);
             var expectedOutput = properties.Where(prop => prop.EndsWith("+")).Select(prop => prop.Substring(0, prop.Length - 1));
 

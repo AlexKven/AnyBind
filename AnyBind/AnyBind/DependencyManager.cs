@@ -34,9 +34,11 @@ namespace AnyBind
 
         public virtual IReadOnlyCollection<IClassAdapter> GetClassAdapters() =>
             new System.Collections.ObjectModel.ReadOnlyCollection<IClassAdapter>(RegisteredClassAdapters);
-        
-        public DependencyManager(int? notifyPropertyChangedClassAdapterPriority = 2,
-            int? observableCollectionClassAdapterPriority = 1)
+
+        public DependencyManager() : this(2, 1) { }
+
+        public DependencyManager(int? notifyPropertyChangedClassAdapterPriority,
+            int? observableCollectionClassAdapterPriority)
         {
             if (notifyPropertyChangedClassAdapterPriority.HasValue)
                 PreRegisteredClassAdapters.Add(new Adapters.NotifyPropertyChangedClassAdapter(), notifyPropertyChangedClassAdapterPriority.Value);

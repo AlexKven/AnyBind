@@ -14,7 +14,7 @@ namespace AnyBind.Internal
         public Type InstanceType { get; }
         public TypeInfo InstanceTypeInfo { get; }
 
-        public List<IInstanceAdapter> Adapters { get; } = new List<IInstanceAdapter>();
+        public List<(IInstanceAdapter, string[])> Adapters { get; } = new List<(IInstanceAdapter, string[])>();
 
         internal GeneralSubscribable(object instance, DependencyManager dependencyManager)
         {
@@ -26,18 +26,23 @@ namespace AnyBind.Internal
 
         private void HookIntoChangeHandlers(DependencyManager dependencyManager)
         {
-            bool subscribed = false;
-            for (int i = 0; i < dependencyManager.GetClassAdapters().Count && !subscribed; i++)
+            var properties = InstanceType.GetRuntimeProperties()
+                .Select(pi => (pi.Name == "Item" && pi.GetIndexParameters().Length > 0) ? "[]" : pi.Name).ToList();
+            IEnumerable<string> toBeSubscribed = properties;
+            for (int i = 0; i < dependencyManager.GetClassAdapters().Count; i++)
             {
                 var adapter = dependencyManager.GetClassAdapters().ElementAt(i);
                 if (adapter.CanSubscribe(InstanceTypeInfo))
                 {
+                    var subscribableProperties = adapter.FilterSubscribableProperties(InstanceTypeInfo, properties).ToArray();
                     var instanceAdapter = adapter.CreateInstanceAdapter(Instance);
                     instanceAdapter.PropertyChanged += (s, e) => OnPropertyChanged(s, e);
-                    instanceAdapter.SubscribeToProperties(InstanceTypeInfo.DeclaredProperties.Select(pi => pi.Name).ToArray());
-                    subscribed = true;
+                    Adapters.Add((instanceAdapter, subscribableProperties));
+                    var subscribed = instanceAdapter.SubscribeToProperties(subscribableProperties.Intersect(toBeSubscribed).ToArray());
+                    toBeSubscribed = toBeSubscribed.Except(subscribed);
                 }
             }
+            toBeSubscribed.ToArray();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
