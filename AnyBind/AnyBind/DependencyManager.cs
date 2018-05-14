@@ -34,11 +34,17 @@ namespace AnyBind
 
         public virtual IReadOnlyCollection<IClassAdapter> GetClassAdapters() =>
             new System.Collections.ObjectModel.ReadOnlyCollection<IClassAdapter>(RegisteredClassAdapters);
-
-        public DependencyManager()
+        
+        public DependencyManager(int? notifyPropertyChangedClassAdapterPriority = 2,
+            int? observableCollectionClassAdapterPriority = 1)
         {
-            PreRegisteredClassAdapters.Add(new Adapters.NotifyPropertyChangedClassAdapter(), 0);
+            if (notifyPropertyChangedClassAdapterPriority.HasValue)
+                PreRegisteredClassAdapters.Add(new Adapters.NotifyPropertyChangedClassAdapter(), notifyPropertyChangedClassAdapterPriority.Value);
+            if (observableCollectionClassAdapterPriority.HasValue)
+                PreRegisteredClassAdapters.Add(new Adapters.ObservableCollectionClassAdapter(), observableCollectionClassAdapterPriority.Value);
         }
+
+        static DependencyManager CreateBare() => new DependencyManager(null, null);
 
         public virtual Dictionary<DependencyBase, List<string>> GetRegistrations(Type type)
         {
