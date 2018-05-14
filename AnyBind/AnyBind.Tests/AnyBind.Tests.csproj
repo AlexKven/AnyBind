@@ -76,7 +76,9 @@
     <Compile Include="Integration Tests\UsageTests.cs" />
     <Compile Include="Test Classes\TestViewModel1.cs" />
     <Compile Include="TestHelpers.cs" />
+    <Compile Include="Unit Tests\Adapters\NotifyPropertyChangedClassAdapterTests.cs" />
     <Compile Include="Unit Tests\Adapters\NotifyPropertyChangedInstanceAdapterTests.cs" />
+    <Compile Include="Unit Tests\Adapters\ObservableCollectionClassAdapterTests.cs" />
     <Compile Include="Unit Tests\Adapters\ObservableCollectionInstanceAdapterTests.cs" />
     <Compile Include="Unit Tests\DependencyManagerTests.cs" />
     <Compile Include="Unit Tests\HelpersTests.cs" />

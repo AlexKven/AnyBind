@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AnyBind.Tests.Test_Classes
+namespace AnyBind.Tests.TestClasses
 {
     public class TestViewModel1 : INotifyPropertyChanged
     {

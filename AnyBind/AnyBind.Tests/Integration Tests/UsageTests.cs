@@ -1,4 +1,4 @@
-﻿using AnyBind.Tests.Test_Classes;
+﻿using AnyBind.Tests.TestClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,7 +63,7 @@ namespace AnyBind.Tests.Integration_Tests
             viewModel.Base.FirstInt = 5;
             viewModel.Base.SecondInt = 2;
             viewModel.ToAdd = 6;
-            viewModel.Base = new Test_Classes.TestViewModel1();
+            viewModel.Base = new TestClasses.TestViewModel1();
             viewModel.Base.FirstInt = 3;
             viewModel.Base.SecondInt = 4;
             viewModel.ToAdd = 5;

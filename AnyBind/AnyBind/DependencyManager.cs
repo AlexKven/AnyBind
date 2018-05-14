@@ -29,6 +29,9 @@ namespace AnyBind
 
         private List<IClassAdapter> RegisteredClassAdapters = new List<IClassAdapter>();
 
+        // May add this for converting indexed properties
+        //public Dictionary<Type, Func<Type, string, (bool, object)>> StringConverters = new Dictionary<Type, Func<Type, string, (bool, object)>>();
+
         public virtual IReadOnlyCollection<IClassAdapter> GetClassAdapters() =>
             new System.Collections.ObjectModel.ReadOnlyCollection<IClassAdapter>(RegisteredClassAdapters);
 
