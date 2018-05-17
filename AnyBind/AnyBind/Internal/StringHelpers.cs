@@ -63,5 +63,28 @@ namespace AnyBind.Internal
                 return null;
             return components.Aggregate(("", ""), (acc, str) => (acc.Item1 == "" ? str : str.StartsWith("[") ? acc.Item1 + str : $"{acc.Item1}.{str}", acc.Item1)).Item2;
         }
+        // [123456]
+        public static bool GetIndexAndParent(this string propertyPath, out string parentPath, out string index)
+        {
+            parentPath = null;
+            index = null;
+            if (propertyPath.EndsWith("["))
+            {
+                int i = propertyPath.Length - 2;
+                while (propertyPath[i] != '[')
+                {
+                    i--;
+                    if (i < 0)
+                        return false;
+                }
+                index = propertyPath.Substring(i + 1, propertyPath.Length - i - 2);
+                if (i > 0 && propertyPath[i - 1] == '.')
+                    parentPath = propertyPath.Substring(0, i - 1); // xyz.[0]
+                else
+                    parentPath = propertyPath.Substring(0, i); // xyz[0]
+                return true;
+            }
+            return false;
+        }
     }
 }

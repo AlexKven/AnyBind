@@ -43,7 +43,10 @@ namespace AnyBind
 
         public void Dispose()
         {
-            UnCachePropertyPath("");
+            if (Instance.TryGetTarget(out var instance))
+                UnCachePropertyPath("", instance);
+            else
+                UnCachePropertyPath("");
             ChangeHandlerDelegates.Clear();
             Manager.ReleaseStrongReference(this);
         }
@@ -107,7 +110,7 @@ namespace AnyBind
             }
         }
 
-        private void UnCachePropertyPath(string propertyPath)
+        private void UnCachePropertyPath(string propertyPath, ISubscribable instance = null)
         {
             foreach (var path in SubscribablePropertyCache.Keys.Where(key => key.StartsWith(propertyPath)))
             {
@@ -117,6 +120,11 @@ namespace AnyBind
                     && ChangeHandlerDelegates.ContainsKey(path))
                 {
                     cached.PropertyChanged -= ChangeHandlerDelegates[path];
+                }
+                if (path.GetIndexAndParent(out var parent, out var index))
+                {
+                    (instance?.GetPropertyValue(parent) as ISubscribable)?.
+                        SubscribeToIndexedProperty(index, parent);
                 }
             }
         }
@@ -159,6 +167,11 @@ namespace AnyBind
                             if (reassembled != "")
                                 Manager.InitializeInstance(propertyValue);
                         }
+                        if (reassembled.GetIndexAndParent(out var parent, out var index))
+                        {
+                            (instance.GetPropertyValue(parent) as ISubscribable)?.
+                                SubscribeToIndexedProperty(index, parent);
+                        }
                     }
                 }
             }
@@ -166,12 +179,13 @@ namespace AnyBind
 
         private void CheckSubpropertyChangeHandlers(string propertyPath)
         {
-            UnCachePropertyPath(propertyPath);
-            ISubscribable instance;
-            if (Instance.TryGetTarget(out instance))
+            if (Instance.TryGetTarget(out var instance))
             {
+                UnCachePropertyPath(propertyPath, instance);
                 CachePropertyPath(propertyPath, instance);
             }
+            else
+                UnCachePropertyPath(propertyPath);
         }
 
         private void OnPropertyChanged(string path, PropertyChangedEventArgs e)

@@ -60,6 +60,9 @@ namespace AnyBind.Tests.UnitTests
             return null;
         }
 
+        public void SubscribeToIndexedProperty(string index, string subscriberId) { }
+        public void UnsubscribeFromIndexedProperty(string index, string subscriberId) { }
+
         private int _Num1 = 0;
         public int Num1
         {
@@ -99,6 +102,9 @@ namespace AnyBind.Tests.UnitTests
         public TestClass2()
         {
         }
+
+        public void SubscribeToIndexedProperty(string index, string subscriberId) { }
+        public void UnsubscribeFromIndexedProperty(string index, string subscriberId) { }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -206,6 +212,9 @@ namespace AnyBind.Tests.UnitTests
 
     public class TestClass3 : ISubscribable
     {
+        public void SubscribeToIndexedProperty(string index, string subscriberId) { }
+        public void UnsubscribeFromIndexedProperty(string index, string subscriberId) { }
+
         private double _Value = 0;
         
         /* Simulated dependency:

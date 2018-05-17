@@ -11,6 +11,9 @@ namespace AnyBind
 
         void RaisePropertyChanged(PropertyChangedEventArgs e);
 
+        void SubscribeToIndexedProperty(string index, string subscriberId);
+        void UnsubscribeFromIndexedProperty(string index, string subscriberId);
+
         Type GetSubscribableType();
     }
 }

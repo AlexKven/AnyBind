@@ -155,6 +155,8 @@ namespace AnyBind.Tests.UnitTests.Internal
                 if (e.PropertyName == propertyName)
                     raised = true;
             };
+            gs.SubscribeToIndexedProperty("0", "");
+            gs.SubscribeToIndexedProperty("1", "");
 
             collection.Add(703);
 

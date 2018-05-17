@@ -14,6 +14,8 @@ namespace AnyBind.Internal
         public Type InstanceType { get; }
         public TypeInfo InstanceTypeInfo { get; }
 
+        public Dictionary<string, SortedSet<string>> SubscribedIndices = new Dictionary<string, SortedSet<string>>();
+
         public List<(IInstanceAdapter, string[])> Adapters { get; } = new List<(IInstanceAdapter, string[])>();
 
         internal GeneralSubscribable(object instance, DependencyManager dependencyManager)
@@ -72,5 +74,47 @@ namespace AnyBind.Internal
         }
 
         public Type GetSubscribableType() => InstanceType;
+
+        public void SubscribeToIndexedProperty(string index, string subscriberId)
+        {
+            SortedSet<string> indices;
+            if (SubscribedIndices.TryGetValue(subscriberId, out indices))
+            {
+                indices.Add(index);
+            }
+            else
+            {
+                indices = new SortedSet<string>() { index };
+                SubscribedIndices.Add(subscriberId, indices);
+                bool subscribed = false;
+                int adapterIndex = 0;
+                while (!subscribed && adapterIndex < Adapters.Count)
+                {
+                    var adapter = Adapters[adapterIndex];
+                    if (adapter.Item2.Contains("[]"))
+                    {
+                        if (adapter.Item1.SubscribeToProperties($"[{index}]").Length == 1)
+                            subscribed = true;
+                    }
+                }
+            }
+        }
+
+        public void UnsubscribeFromIndexedProperty(string index, string subscriberId)
+        {
+            if (SubscribedIndices.TryGetValue(subscriberId, out var indices))
+            {
+                if (indices.Remove(index))
+                {
+                    if (!SubscribedIndices.Any(kvp => kvp.Value.Contains(index)))
+                    {
+                        foreach (var adapter in Adapters)
+                        {
+                            adapter.Item1.UnsubscribeFromProperties($"[{index}]");
+                        }
+                    }
+                }
+            }
+        }
     }
 }
