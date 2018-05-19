@@ -1,4 +1,5 @@
-﻿using AnyBind.Internal;
+﻿using AnyBind.Caching;
+using AnyBind.Internal;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,7 +17,26 @@ namespace AnyBind
         private TypeInfo InstanceTypeInfo;
         private Dictionary<string, PropertyChangedEventHandler> ChangeHandlerDelegates = new Dictionary<string, PropertyChangedEventHandler>();
         private Dictionary<string, List<string>> PropertyDependencies = new Dictionary<string, List<string>>();
-        private Dictionary<string, WeakReference<ISubscribable>> SubscribablePropertyCache = new Dictionary<string, WeakReference<ISubscribable>>();
+
+        private WeakReferenceCache<string, ISubscribable> SubscribablePropertyCache = new WeakReferenceCache<string, ISubscribable>();
+        private StrongReferenceCache<string, List<string>> SubscribedConstantIndexCache = new StrongReferenceCache<string, List<string>>();
+        private StrongReferenceCache<string, StrongReferenceCache<string, string>> SubscribedVariableIndexCache = new StrongReferenceCache<string, StrongReferenceCache<string, string>>();
+
+        //private IEnumerable<string> GetAllSubscribedIndices(string path)
+        //{
+        //    if (SubscribedConstantIndexCache.TryGetValue(path, out var list1))
+        //    {
+        //        foreach (var item in list1)
+        //            yield return item;
+        //    }
+        //    if (SubscribedVariableIndexCache.TryGetValue(path, out var list2))
+        //    {
+        //        foreach (var item in list2)
+        //        {
+        //            yield return item.Item2;
+        //        }
+        //    }
+        //}
 
         public SubscribableHandler(DependencyManager manager, ISubscribable instance)
         {
@@ -26,6 +46,11 @@ namespace AnyBind
             InstanceType = instance.GetType();
             InstanceTypeInfo = InstanceType.GetTypeInfo();
 
+            SubscribablePropertyCache.SetActions.Add(SubscribablePropertyCache_InitializeBindingInstance);
+            SubscribablePropertyCache.SetActions.Add(SubscribablePropertyCache_SubscribeToEvent);
+            SubscribablePropertyCache.SetActions.Add(SubscribablePropertyCache_InitializeBindingInstance);
+            SubscribablePropertyCache.RemoveActions.Add(SubscribablePropertyCache_UnsubscribeFromEvent);
+
             foreach (var dependency in manager.GetRegistrations(instance.GetSubscribableType()))
             {
                 switch (dependency.Key)
@@ -33,12 +58,50 @@ namespace AnyBind
                     case PropertyDependency propertyDependency:
                         var name = propertyDependency.PropertyName;
                         foreach (var str in dependency.Value)
+                        {
                             PropertyDependencies.SafeAddToDictionaryOfList(str, name);
+                            if (name.GetIndexAndParent(out var parent, out var index))
+                            {
+                                if (index.StartsWith("<"))
+                                {
+                                    var indexPath = index.Substring(1, index.Length - 2);
+                                    var indexValue = instance.GetPropertyValue(indexPath)?.ToString();
+                                    if (!SubscribedVariableIndexCache.ContainsKey(parent))
+                                    {
+                                        SubscribedVariableIndexCache[parent] = new StrongReferenceCache<string, string>();
+                                    }
+                                    SubscribedVariableIndexCache[parent][index] = indexValue;
+                                }
+                                else
+                                {
+                                    SubscribedConstantIndexCache.SafeAddToCacheOfList(parent, index);
+                                }
+                            }
+                        }
                         break;
                 }
             }
 
             CachePropertyPath("", instance);
+        }
+
+        private void SubscribablePropertyCache_InitializeBindingInstance(string path, ISubscribable value)
+        {
+            if (path != "")
+                Manager.InitializeInstance(value);
+        }
+
+        private void SubscribablePropertyCache_SubscribeToEvent(string path, ISubscribable value)
+        {
+            value.PropertyChanged += GetChangeHandlerDelegate(this, path);
+        }
+
+        private void SubscribablePropertyCache_UnsubscribeFromEvent(string path, ISubscribable value)
+        {
+            if (ChangeHandlerDelegates.ContainsKey(path))
+            {
+                value.PropertyChanged -= ChangeHandlerDelegates[path];
+            }
         }
 
         public void Dispose()
@@ -49,30 +112,6 @@ namespace AnyBind
                 UnCachePropertyPath("");
             ChangeHandlerDelegates.Clear();
             Manager.ReleaseStrongReference(this);
-        }
-
-        bool TryGetSubscribablePropertyCache(string propertyPath, out ISubscribable result)
-        {
-            if (SubscribablePropertyCache.TryGetValue(propertyPath, out var weak))
-            {
-                if (weak.TryGetTarget(out result))
-                    return true;
-            }
-            result = null;
-            return false;
-        }
-
-        bool TryAddToSubscribablePropertyCache(string propertyPath, object value)
-        {
-            if (value is ISubscribable typedValue)
-            {
-                if (SubscribablePropertyCache.ContainsKey(propertyPath))
-                    SubscribablePropertyCache[propertyPath] = new WeakReference<ISubscribable>(typedValue);
-                else
-                    SubscribablePropertyCache.Add(propertyPath, new WeakReference<ISubscribable>(typedValue));
-                return true;
-            }
-            return false;
         }
 
         private static PropertyChangedEventHandler GetChangeHandlerDelegate(SubscribableHandler instance, string senderPath)
@@ -112,20 +151,9 @@ namespace AnyBind
 
         private void UnCachePropertyPath(string propertyPath, ISubscribable instance = null)
         {
-            foreach (var path in SubscribablePropertyCache.Keys.Where(key => key.StartsWith(propertyPath)))
+            foreach (var path in SubscribablePropertyCache.Keys.Where(key => key.StartsWith(propertyPath)).ToArray())
             {
-                // if nocache
-                if (TryGetSubscribablePropertyCache(path, out var cached)
-                    && cached != null
-                    && ChangeHandlerDelegates.ContainsKey(path))
-                {
-                    cached.PropertyChanged -= ChangeHandlerDelegates[path];
-                }
-                if (path.GetIndexAndParent(out var parent, out var index))
-                {
-                    (instance?.GetPropertyValue(parent) as ISubscribable)?.
-                        SubscribeToIndexedProperty(index, parent);
-                }
+                SubscribablePropertyCache.TryClearValue(path);
             }
         }
 
@@ -161,17 +189,21 @@ namespace AnyBind
                     if (Manager.CanSubscribe(typeInfo))
                     {
                         var typedPropertyValue = GeneralSubscribable.CreateSubscribable(propertyValue, Manager);
-                        if (TryAddToSubscribablePropertyCache(reassembled, typedPropertyValue))
-                        {
-                            typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, reassembled);
-                            if (reassembled != "")
-                                Manager.InitializeInstance(propertyValue);
-                        }
-                        if (reassembled.GetIndexAndParent(out var parent, out var index))
-                        {
-                            (instance.GetPropertyValue(parent) as ISubscribable)?.
-                                SubscribeToIndexedProperty(index, parent);
-                        }
+
+                        //if (SubscribablePropertyCache.TryGetValue(reassembled, out var old))
+                        //{
+                        //    foreach (var index in GetAllSubscribedIndices(reassembled))
+                        //    {
+                        //        old.SubscribeToIndexedProperty(reassembled, index);
+                        //    }
+                        //}
+
+                        SubscribablePropertyCache.TrySetValue(reassembled, typedPropertyValue);
+
+                        //foreach (var index in GetAllSubscribedIndices(reassembled))
+                        //{
+                        //    typedPropertyValue.SubscribeToIndexedProperty(reassembled, index);
+                        //}
                     }
                 }
             }
@@ -186,8 +218,9 @@ namespace AnyBind
             }
             else
                 UnCachePropertyPath(propertyPath);
+            
         }
-
+        
         private void OnPropertyChanged(string path, PropertyChangedEventArgs e)
         {
             var propertyPath = StringHelpers.ReassemblePropertyPath(path, e.PropertyName);

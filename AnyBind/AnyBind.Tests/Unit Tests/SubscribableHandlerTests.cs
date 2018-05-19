@@ -60,8 +60,10 @@ namespace AnyBind.Tests.UnitTests
             return null;
         }
 
-        public void SubscribeToIndexedProperty(string index, string subscriberId) { }
-        public void UnsubscribeFromIndexedProperty(string index, string subscriberId) { }
+        public virtual void SubscribeToIndexedProperty(string index, string subscriberId)
+        { }
+        public virtual void UnsubscribeFromIndexedProperty(string index, string subscriberId)
+        { }
 
         private int _Num1 = 0;
         public int Num1
@@ -212,9 +214,9 @@ namespace AnyBind.Tests.UnitTests
 
     public class TestClass3 : ISubscribable
     {
+
         public void SubscribeToIndexedProperty(string index, string subscriberId) { }
         public void UnsubscribeFromIndexedProperty(string index, string subscriberId) { }
-
         private double _Value = 0;
         
         /* Simulated dependency:
@@ -644,6 +646,8 @@ namespace AnyBind.Tests.UnitTests
             // Arrange
             SetupTestClasses();
 
+            Mock<TestClass1> mockTC1 = new Mock<TestClass1>() { CallBase = true };
+
             TestClass2 testClass = new TestClass2();
             TestClass1 testClass1 = new TestClass1();
             testClass.Class1 = testClass1;
@@ -672,7 +676,7 @@ namespace AnyBind.Tests.UnitTests
             testClass.Class1["One"].Num2 = 2;
             testClass.Class1["Two"].Num1 = 3;
             testClass.Class1["Two"].Num2 = 3;
-            testClass.Class1 = new TestClass1();
+            testClass.Class1 = mockTC1.Object;
             testClass.Class1["One"].Num2 = 2;
             testClass.Class1.Str = "Two";
             testClass.Class1["Two"].Num2 = 3;
@@ -685,6 +689,9 @@ namespace AnyBind.Tests.UnitTests
             Assert.Equal(expected: 7, actual: callCounts["Indexer"]);
             Assert.Equal(expected: 5, actual: callCounts["BoundIndexer"]);
             Assert.Equal(expected: 5, actual: calculation);
+            mockTC1.Verify(tc1 => tc1.SubscribeToIndexedProperty("One", "Class1"));
+            mockTC1.Verify(tc1 => tc1.UnsubscribeFromIndexedProperty("One", "Class1"));
+            mockTC1.Verify(tc1 => tc1.SubscribeToIndexedProperty("Two", "Class1"));
         }
 
         [Fact]

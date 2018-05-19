@@ -68,7 +68,7 @@ namespace AnyBind.Internal
         {
             parentPath = null;
             index = null;
-            if (propertyPath.EndsWith("["))
+            if (propertyPath.EndsWith("]"))
             {
                 int i = propertyPath.Length - 2;
                 while (propertyPath[i] != '[')

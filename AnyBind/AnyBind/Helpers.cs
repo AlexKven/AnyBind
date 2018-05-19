@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AnyBind.Caching;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -66,6 +67,30 @@ namespace AnyBind
             else
             {
                 dict.Add(key, items.ToList());
+            }
+        }
+
+        internal static void SafeAddToCacheOfList<TKey, TList>(this CacheBase<TKey, List<TList>> cache, TKey key, params TList[] items)
+        {
+            if (cache.TryGetValue(key, out var list))
+            {
+                list.AddRange(items);
+            }
+            else
+            {
+                cache.TrySetValue(key, items.ToList());
+            }
+        }
+
+        internal static void SafeAddToCacheOfDictionary<TKey, TDKey, TDValue>(this CacheBase<TKey, Dictionary<TDKey, TDValue>> cache, TKey key, TDKey innerKey, TDValue value)
+        {
+            if (cache.TryGetValue(key, out var innerDict))
+            {
+                innerDict.Add(innerKey, value);
+            }
+            else
+            {
+                cache.TrySetValue(key, new Dictionary<TDKey, TDValue>() { [innerKey] = value });
             }
         }
     }
