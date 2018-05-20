@@ -80,6 +80,7 @@
     <Compile Include="Unit Tests\Adapters\NotifyPropertyChangedInstanceAdapterTests.cs" />
     <Compile Include="Unit Tests\Adapters\ObservableCollectionClassAdapterTests.cs" />
     <Compile Include="Unit Tests\Adapters\ObservableCollectionInstanceAdapterTests.cs" />
+    <Compile Include="Unit Tests\Caching\CacheBaseTests.cs" />
     <Compile Include="Unit Tests\DependencyManagerTests.cs" />
     <Compile Include="Unit Tests\HelpersTests.cs" />
     <Compile Include="Unit Tests\Internal\GeneralSubscribableTests.cs" />
