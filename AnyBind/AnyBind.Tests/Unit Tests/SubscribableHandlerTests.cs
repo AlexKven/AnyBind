@@ -686,12 +686,9 @@ namespace AnyBind.Tests.UnitTests
             testClass.Class1["Two"].Num1 = 3;
 
             // Assert
-            Assert.Equal(expected: 7, actual: callCounts["Indexer"]);
-            Assert.Equal(expected: 5, actual: callCounts["BoundIndexer"]);
-            Assert.Equal(expected: 5, actual: calculation);
-            mockTC1.Verify(tc1 => tc1.SubscribeToIndexedProperty("One", "Class1"));
-            mockTC1.Verify(tc1 => tc1.UnsubscribeFromIndexedProperty("One", "Class1"));
-            mockTC1.Verify(tc1 => tc1.SubscribeToIndexedProperty("Two", "Class1"));
+            mockTC1.Verify(tc1 => tc1.SubscribeToIndexedProperty("\"One\"", "Class1"));
+            mockTC1.Verify(tc1 => tc1.UnsubscribeFromIndexedProperty("\"One\"", "Class1"));
+            mockTC1.Verify(tc1 => tc1.SubscribeToIndexedProperty("\"Two\"", "Class1"));
         }
 
         [Fact]

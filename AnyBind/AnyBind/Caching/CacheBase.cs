@@ -120,5 +120,13 @@ namespace AnyBind.Caching
         public abstract IEnumerable<TKey> Keys { get; }
 
         public abstract bool ContainsKey(TKey key);
+
+        public void ApplyToEach(Action<TKey, TValue> action)
+        {
+            foreach (var item in this)
+            {
+                action(item.Key, item.Value);
+            }
+        }
     }
 }
