@@ -27,10 +27,18 @@ namespace AnyBind.Tests.UnitTests.Caching
 
         void SetupGet()
         {
+            MockCache.Protected().Setup<bool>("TryGetValueInternal", ItExpr.IsAny<string>(), ItExpr.Ref<int>.IsAny).Returns(false);
+            MockCache.Protected().Setup<bool>("TryClearValueInternal", ItExpr.IsAny<string>(), ItExpr.Ref<int>.IsAny).Returns(false);
             foreach (var kvp in Items)
             {
                 MockCache.Protected().Setup<bool>("TryGetValueInternal", kvp.Key, ItExpr.Ref<int>.IsAny).
                     Callback(new ReturnCallback((string key, out int result) => result = kvp.Value)).Returns(true);
+                MockCache.Protected().Setup<bool>("TryClearValueInternal", kvp.Key, ItExpr.Ref<int>.IsAny).
+                    Callback(new ReturnCallback((string key, out int result) =>
+                    {
+                        result = kvp.Value;
+                        Items.Remove(key);
+                    })).Returns(true);
             }
         }
 
@@ -65,6 +73,23 @@ namespace AnyBind.Tests.UnitTests.Caching
             // Assert
             Mock.Get(getAction).Verify(act => act("Five", 5));
             Assert.Equal(expected: 5, actual: result);
+        }
+
+        [Fact]
+        public void RemoveActions_Success()
+        {
+            // Arrange
+            Setup();
+            var removeAction = Mock.Of<Action<string, int>>();
+            Cache.RemoveActions.Add(removeAction);
+            Items.Add("Five", 5);
+            SetupGet();
+
+            // Act
+            Cache.TryClearValue("Five");
+
+            // Assert
+            Mock.Get(removeAction).Verify(act => act("Five", 5));
         }
     }
 }
