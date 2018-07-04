@@ -76,6 +76,7 @@
     <Compile Include="Unit Tests\DependencyManagerTests.cs" />
     <Compile Include="Unit Tests\HelpersTests.cs" />
     <Compile Include="Unit Tests\Internal\GeneralSubscribableTests.cs" />
+    <Compile Include="Unit Tests\Internal\PropertyTests.cs" />
     <Compile Include="Unit Tests\Internal\StringHelpersTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unit Tests\Internal\ReflectionHelpersTests.cs" />
