@@ -58,12 +58,9 @@ Thumbs.db
 !**/packages/repositories.config
 # For sqlite
 .vs/*
+/AnyBind/.vs/*
 
 # No keys for you
 /TransitMap/TransitMap.Common/Keys.cs
-/AnyBind/.vs/AnyBind/v15/Server/sqlite3/db.lock
-/AnyBind/.vs/AnyBind/v15/Server/sqlite3/storage.ide
-/AnyBind/.vs/AnyBind/v15/Server/sqlite3/storage.ide-shm
-/AnyBind/.vs/AnyBind/v15/Server/sqlite3/storage.ide-wal
 
 AnyBind/NuGet/nuget\.exe
