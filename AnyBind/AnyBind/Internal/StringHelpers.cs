@@ -10,26 +10,9 @@ namespace AnyBind.Internal
         public static IEnumerable<string> DisassemblePropertyPath(this string propertyPath)
         {
             StringBuilder sb = new StringBuilder();
-            int indexerDepth = 0;
             foreach (var character in propertyPath)
             {
-                if (character == '[')
-                {
-                    indexerDepth++;
-                    if (indexerDepth == 1)
-                    {
-                        if (sb.Length > 0)
-                            yield return sb.ToString();
-                        sb = new StringBuilder();
-                    }
-                }
-                if (indexerDepth > 0)
-                {
-                    if (character == ']')
-                        indexerDepth--;
-                    sb.Append(character);
-                }
-                else if (character == '.')
+                if (character == '.')
                 {
                     if (sb.Length > 0)
                         yield return sb.ToString();
@@ -63,11 +46,5 @@ namespace AnyBind.Internal
                 return null;
             return components.Aggregate(("", ""), (acc, str) => (acc.Item1 == "" ? str : str.StartsWith("[") ? acc.Item1 + str : $"{acc.Item1}.{str}", acc.Item1)).Item2;
         }
-
-        //public static bool IsIndexList(this string str, out IEnumerable<string> indexes)
-        //{
-        //    if (!str.StartsWith()
-        //    List<string> result = new List<string>();
-        //}
     }
 }

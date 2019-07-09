@@ -628,55 +628,6 @@ namespace AnyBind.Tests.UnitTests
         }
 
         [Fact]
-        public void SubpropertyIndexedTest()
-        {
-            // Arrange
-            SetupTestClasses();
-
-            TestClass2 testClass = new TestClass2();
-            TestClass1 testClass1 = new TestClass1();
-            testClass.Class1 = testClass1;
-            SubscribableHandler handler = new SubscribableHandler(DependencyManager.Object, testClass);
-
-            Dictionary<string, int> callCounts = GetCallCountsDict();
-
-            int calculation = 0;
-
-            testClass.PropertyChanged += (s, e) =>
-            {
-                callCounts[e.PropertyName]++;
-                calculation = testClass.Indexer;
-            };
-
-            testClass1.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName.StartsWith("["))
-                    callCounts[$"Class1{e.PropertyName}"]++;
-                else
-                    callCounts[$"Class1.{e.PropertyName}"]++;
-            };
-
-            // Act
-            testClass.Class1["One"].Num1 = 2;
-            testClass.Class1["One"].Num2 = 2;
-            testClass.Class1["Two"].Num1 = 3;
-            testClass.Class1["Two"].Num2 = 3;
-            testClass.Class1 = new TestClass1();
-            testClass.Class1["One"].Num2 = 2;
-            testClass.Class1.Str = "Two";
-            testClass.Class1["Two"].Num2 = 3;
-            testClass.Class1["One"] = new TestClass2();
-            testClass.Class1["Two"] = new TestClass2();
-            testClass.Class1["One"].Num1 = 2;
-            testClass.Class1["Two"].Num1 = 3;
-
-            // Assert
-            Assert.Equal(expected: 7, actual: callCounts["Indexer"]);
-            Assert.Equal(expected: 5, actual: callCounts["BoundIndexer"]);
-            Assert.Equal(expected: 5, actual: calculation);
-        }
-
-        [Fact]
         public void NonISubscribableSubPropertyTest()
         {
             // Arrange

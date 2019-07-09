@@ -8,18 +8,8 @@ namespace AnyBind.Internal
 {
     internal static class ReflectionHelpers
     {
-        internal static bool TryGetMemberValue(object instance, TypeInfo typeInfo, string memberName, out object memberValue, bool searchFields = true, bool searchProperties = true, Func<string, object> indexerProvider = null)
+        internal static bool TryGetMemberValue(object instance, TypeInfo typeInfo, string memberName, out object memberValue, bool searchFields = true, bool searchProperties = true)
         {
-            if (memberName.StartsWith("[") && memberName.EndsWith("]") && searchProperties)
-            {
-                var indexer = memberName.Substring(1, memberName.Length - 2);
-                if (indexer.StartsWith("<") && indexer.EndsWith(">") && indexerProvider != null)
-                {
-                    indexer = indexer.Substring(1, indexer.Length - 2);
-                    return TryGetIndexedPropertyValue(instance, typeInfo, indexerProvider(indexer), out memberValue);
-                }
-                return TryGetIndexedPropertyValue(instance, typeInfo, indexer, out memberValue);
-            }
             if (searchProperties)
             {
                 var property = SearchTypeAndBase(typeInfo, t => t.DeclaredProperties.FirstOrDefault(pi => pi.Name == memberName));
@@ -37,26 +27,6 @@ namespace AnyBind.Internal
                 {
                     memberValue = field.GetValue(instance);
                     return true;
-                }
-            }
-            memberValue = null;
-            return false;
-        }
-
-        internal static bool TryGetIndexedPropertyValue(object instance, TypeInfo typeInfo, object indexer, out object memberValue)
-        {
-            var property = SearchTypeAndBase(typeInfo, t => t.DeclaredProperties.FirstOrDefault(pi => pi.Name == "Item"));
-            if (property != null)
-            {
-                ParameterInfo[] parameters;
-                if ((parameters = property.GetIndexParameters()).Length == 1)
-                {
-                    try
-                    {
-                        memberValue = property.GetValue(instance, new object[] { System.Convert.ChangeType(indexer, parameters[0].ParameterType) });
-                        return true;
-                    }
-                    catch (Exception) { }
                 }
             }
             memberValue = null;
@@ -98,7 +68,7 @@ namespace AnyBind.Internal
             }
         }
 
-        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, out object parentValue, bool searchFields = true, bool searchProperties = true, Func<string, object> indexerProvider = null)
+        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, out object parentValue, bool searchFields = true, bool searchProperties = true)
         {
             memberValue = null;
             parentValue = null;
@@ -110,7 +80,7 @@ namespace AnyBind.Internal
                 parentValue = next;
                 var member = splitPath[0];
                 splitPath.RemoveAt(0);
-                if (!ReflectionHelpers.TryGetMemberValue(parentValue, nextTypeInfo, member, out next, searchFields, searchProperties, indexerProvider))
+                if (!ReflectionHelpers.TryGetMemberValue(parentValue, nextTypeInfo, member, out next, searchFields, searchProperties))
                 {
                     memberValue = null;
                     return false;
@@ -121,14 +91,14 @@ namespace AnyBind.Internal
             return true;
         }
 
-        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, bool searchFields = true, bool searchProperties = true, Func<string, object> indexerProvider = null)
+        internal static bool TryGetMemberPathValue(object instance, TypeInfo typeInfo, string memberPath, out object memberValue, bool searchFields = true, bool searchProperties = true)
         {
-            return TryGetMemberPathValue(instance, typeInfo, memberPath, out memberValue, out _, searchFields, searchProperties, indexerProvider);
+            return TryGetMemberPathValue(instance, typeInfo, memberPath, out memberValue, out _, searchFields, searchProperties);
         }
         
         internal static object GetParentOfSubentity(object instance, TypeInfo typeInfo, string path)
         {
-            var splitPath = path.Replace("[", ".[").Split('.').ToList();
+            var splitPath = path.Split('.').ToList();
             while (instance != null && splitPath.Count > 1)
             {
                 var member = splitPath[0];

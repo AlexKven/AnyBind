@@ -40,7 +40,7 @@ namespace AnyBind.Internal
 
         public object GetPropertyValue(string propertyPath)
         {
-            if (!ReflectionHelpers.TryGetMemberPathValue(Instance, InstanceTypeInfo, propertyPath, out var result, false, true, path => GetPropertyValue(path)))
+            if (!ReflectionHelpers.TryGetMemberPathValue(Instance, InstanceTypeInfo, propertyPath, out var result, false, true))
                 return null;
             return result;
         }

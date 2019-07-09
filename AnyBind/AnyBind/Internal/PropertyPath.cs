@@ -89,31 +89,4 @@ namespace AnyBind.Internal
         }
         public override bool NeedsDelimiter => true;
     }
-
-    public sealed class IndexedProperty : PropertyBase
-    {
-        public IndexedProperty(params string[] indexes)
-            : base(GetNameFromIndexes(indexes))
-        { }
-        public override bool NeedsDelimiter => false;
-
-        private static string GetNameFromIndexes(params string[] indexes)
-        {
-            if (indexes.Length == 0)
-                throw new ArgumentException($"{nameof(indexes)} must contain at least one index.");
-            StringBuilder sb = new StringBuilder("[");
-            bool needComma = false;
-            foreach (var index in indexes)
-            {
-                if (needComma)
-                {
-                    sb.Append(',');
-                }
-                sb.Append(index);
-                needComma = true;
-            }
-            sb.Append("]");
-            return sb.ToString();
-        }
-    }
 }

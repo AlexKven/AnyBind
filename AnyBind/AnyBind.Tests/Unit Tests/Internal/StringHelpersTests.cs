@@ -17,12 +17,6 @@ namespace AnyBind.Tests.UnitTests.Internal
         [InlineData("First.Second.Third.", "First", "Second", "Third")]
         [InlineData("First..Second.Third.", "First", "Second", "Third")]
         [InlineData(".First.Second.Third", "First", "Second", "Third")]
-        [InlineData("[Index].Property", "[Index]", "Property")]
-        [InlineData("Property[Index]", "Property", "[Index]")]
-        [InlineData("Property[Index].Property", "Property", "[Index]", "Property")]
-        [InlineData("Property.[Index].Property", "Property", "[Index]", "Property")]
-        [InlineData("Property[<P1.P2>].Property", "Property", "[<P1.P2>]", "Property")]
-        [InlineData("Property[<P1[inside].P2>].Property", "Property", "[<P1[inside].P2>]", "Property")]
         public void DisassemblePropertyPath(string propertyPath, params string[] components)
         {
             // Arrange, Act
