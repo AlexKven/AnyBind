@@ -156,7 +156,7 @@ namespace AnyBind
                         if (TryAddToSubscribablePropertyCache(reassembled, typedPropertyValue))
                         {
                             typedPropertyValue.PropertyChanged += GetChangeHandlerDelegate(this, reassembled);
-                            if (reassembled != "")
+                            if (reassembled != "" && Manager.IsTypeRegistered(propertyValue?.GetType()))
                                 Manager.InitializeInstance(propertyValue);
                         }
                     }

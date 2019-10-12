@@ -29,8 +29,9 @@ namespace AnyBind
             if (!Registrations.TryGetValue(type, out var result))
                 throw new KeyNotFoundException($"No such class as {type} was registered.");
             return result;
-            
         }
+
+        public bool IsTypeRegistered(Type type) => Registrations.ContainsKey(type);
 
         public virtual void InitializeInstance(object instance)
         {
